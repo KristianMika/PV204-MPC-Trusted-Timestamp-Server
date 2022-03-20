@@ -72,7 +72,38 @@ fn main() -> std::io::Result<()> {
 
     /* Simulation ends. Main code starts */
 
+    //This is what I have gotten from you two
     let suyash_my_secret_shares = vec![david_their_secret_shares[0].clone(), kristian_their_secret_shares[0].clone()];
+
+    /* Foreign code */
+    let kristian_my_secret_shares = vec![david_their_secret_shares[0].clone(), suyash_their_secret_shares[0].clone()];
+    let david_my_secret_shares = vec![kristian_their_secret_shares[0].clone(), suyash_their_secret_shares[0].clone()];
+
+    //State updates. Advancing to round 2:
+
+    let suyash_state = suyash_state.to_round_two(suyash_my_secret_shares).unwrap();
+
+    /*Foreign code */
+    let david_state = david_state.to_round_two(david_my_secret_shares).unwrap();
+    let kristian_state = kristian_state.to_round_two(kristian_my_secret_shares).unwrap();
+
+    let (suyash_group_key, suyash_secret_key) = suyash_state.finish(suyash.public_key().unwrap()).unwrap(); //Too tired to make a panic code.
+
+    /*Foreign code */
+
+    let (david_group_key, david_secret_key) = david_state.finish(david.public_key().unwrap()).unwrap();
+    let (kristian_group_key, kristian_secret_key) = kristian_state.finish(kristian.public_key().unwrap()).unwrap();
+
+    assert!(suyash_group_key == kristian_group_key);
+    assert!(suyash_group_key == david_group_key);
+
+    let suyash_public_key = suyash_secret_key.to_public();
+    let david_public_key = david_secret_key.to_public();
+    let kristian_public_key = kristian_secret_key.to_public();
+
+    println!("Suyash's public key: {:?}", suyash_public_key);
+    println!("Dave's public key: {:?}", david_public_key);
+    println!("Kristi's public key: {:?}", kristian_public_key);
 
     Ok(())
 
