@@ -13,10 +13,13 @@ fn main() -> std::io::Result<()> {
     let (kristian, kristian_coef) = Participant::new(&params, 2);
     let (suyash, suyash_coef) = Participant::new(&params, 3);
 
+    // dbg!(&david);
+    // dbg!(&kristian);
+    // dbg!(&suyash);
+
     /*
     These participant indices need to be agree-ed upon out of scope. We could use our UCO's here. like ID numbers.
     As we can also make them public. THat edit will be tried later.
-    This also helps saving an exchange step.
     
     - Okay these structs by our names need to be shared : david, kritian..
     The corresponding coeffs are private.
@@ -24,21 +27,9 @@ fn main() -> std::io::Result<()> {
 
     // Each of us need to verify the other 2 person's zkp by doing this:
     /* EDIT IN YOUR SERVERS */
-    let daveproof = match david.proof_of_secret_key.verify(&david.index, &david.public_key().unwrap()) {
-        Ok(v) => v,
-        Err(e) => panic!("Not David! NOT DAVID!!!\n{:?}",e)
-    };
+    david.proof_of_secret_key.verify(&david.index, &david.public_key().unwrap());
 
-    println!("Davy's proof: {:?}", daveproof);
-
-    
-
-    let krisproof = match kristian.proof_of_secret_key.verify(&kristian.index, &kristian.public_key().unwrap()) {
-        Ok(v) => v,
-        Err(e) => panic!("Not Kristian! NOT KRISTIAN!!!\n{:?}",e)
-    };
-
-    println!("Kristi's proof: {:?}", krisproof);
+    kristian.proof_of_secret_key.verify(&kristian.index, &kristian.public_key().unwrap());
 
     // Suyash enters round one of the distributed key exchange
     let mut suyash_other_parts: Vec<Participant> = vec![david.clone(),kristian.clone()];
@@ -73,8 +64,7 @@ fn main() -> std::io::Result<()> {
     let mut kristian_other_parts: Vec<Participant> = vec![david.clone(), suyash.clone()];
     let kristian_state = DistributedKeyGeneration::<_>::new(&params, &kristian.index, &kristian_coef, &mut kristian_other_parts).unwrap();
     let kristian_their_secret_shares = kristian_state.their_secret_shares().unwrap();
-
-    /* Simulation ends. Main code starts */
+    /* Foreign code ends. Main code starts */
 
     //This is what I have gotten from you two
     let suyash_my_secret_shares = vec![david_their_secret_shares[0].clone(), kristian_their_secret_shares[0].clone()];
@@ -85,7 +75,10 @@ fn main() -> std::io::Result<()> {
 
     //State updates. Advancing to round 2:
 
-    let suyash_state = suyash_state.to_round_two(suyash_my_secret_shares).unwrap();
+    let suyash_state = match suyash_state.to_round_two(suyash_my_secret_shares) {
+        Ok(v) => v,
+        Err(e) => panic!(" Suyash can't move to round 2:\n{:?}",e)
+    };
 
     /*Foreign code */
     let david_state = david_state.to_round_two(david_my_secret_shares).unwrap();
