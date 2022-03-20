@@ -13,10 +13,6 @@ fn main() -> std::io::Result<()> {
     let (kristian, kristian_coef) = Participant::new(&params, 2);
     let (suyash, suyash_coef) = Participant::new(&params, 3);
 
-    // dbg!(&david);
-    // dbg!(&kristian);
-    // dbg!(&suyash);
-
     /*
     These participant indices need to be agree-ed upon out of scope. We could use our UCO's here. like ID numbers.
     As we can also make them public. THat edit will be tried later.
@@ -42,7 +38,9 @@ fn main() -> std::io::Result<()> {
     let suyash_their_secret_shares = match suyash_state.their_secret_shares() {
         Ok(v) => v,
         Err(e) => panic!(" Error producing secret to share: {:?}", e)
+        
     };
+    dbg!(&suyash_their_secret_shares);
 
     /*
     To be done later:
@@ -60,24 +58,26 @@ fn main() -> std::io::Result<()> {
     let mut david_other_parts: Vec<Participant> = vec![suyash.clone(), kristian.clone()];
     let david_state = DistributedKeyGeneration::<_>::new(&params, &david.index, &david_coef, &mut david_other_parts).unwrap();
     let david_their_secret_shares = david_state.their_secret_shares().unwrap(); // You would handle the error in your code and return me the unwrapped value if no error.
+    dbg!(&david_their_secret_shares);
 
     let mut kristian_other_parts: Vec<Participant> = vec![david.clone(), suyash.clone()];
     let kristian_state = DistributedKeyGeneration::<_>::new(&params, &kristian.index, &kristian_coef, &mut kristian_other_parts).unwrap();
     let kristian_their_secret_shares = kristian_state.their_secret_shares().unwrap();
+    dbg!(&kristian_their_secret_shares);
     /* Foreign code ends. Main code starts */
 
     //This is what I have gotten from you two
-    let suyash_my_secret_shares = vec![david_their_secret_shares[0].clone(), kristian_their_secret_shares[0].clone()];
+    let suyash_my_secret_shares = vec![david_their_secret_shares[0].clone(), kristian_their_secret_shares[1].clone()];
 
     /* Foreign code */
-    let kristian_my_secret_shares = vec![david_their_secret_shares[0].clone(), suyash_their_secret_shares[0].clone()];
+    let kristian_my_secret_shares = vec![david_their_secret_shares[1].clone(), suyash_their_secret_shares[1].clone()];
     let david_my_secret_shares = vec![kristian_their_secret_shares[0].clone(), suyash_their_secret_shares[0].clone()];
 
     //State updates. Advancing to round 2:
 
     let suyash_state = match suyash_state.to_round_two(suyash_my_secret_shares) {
         Ok(v) => v,
-        Err(e) => panic!(" Suyash can't move to round 2:\n{:?}",e)
+        Err(()) => panic!(" Suyash can't move to round 2")
     };
 
     /*Foreign code */
