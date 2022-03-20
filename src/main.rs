@@ -26,15 +26,19 @@ fn main() -> std::io::Result<()> {
     /* EDIT IN YOUR SERVERS */
     let daveproof = match david.proof_of_secret_key.verify(&david.index, &david.public_key().unwrap()) {
         Ok(v) => v,
-        Err(e) => panic!("Not David! NOT DAVID\n{:?}",e)
+        Err(e) => panic!("Not David! NOT DAVID!!!\n{:?}",e)
     };
+
+    println!("Davy's proof: {:?}", daveproof);
 
     
 
     let krisproof = match kristian.proof_of_secret_key.verify(&kristian.index, &kristian.public_key().unwrap()) {
         Ok(v) => v,
-        Err(e) => panic!("Not Kristian! NOT KRISTIAN\n{:?}",e)
+        Err(e) => panic!("Not Kristian! NOT KRISTIAN!!!\n{:?}",e)
     };
+
+    println!("Kristi's proof: {:?}", krisproof);
 
     // Suyash enters round one of the distributed key exchange
     let mut suyash_other_parts: Vec<Participant> = vec![david.clone(),kristian.clone()];
