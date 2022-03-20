@@ -23,9 +23,9 @@ fn main() -> std::io::Result<()> {
 
     // Each of us need to verify the other 2 person's zkp by doing this:
     /* EDIT IN YOUR SERVERS */
-    david.proof_of_secret_key.verify(&david.index, &david.public_key().unwrap());
+    david.proof_of_secret_key.verify(&david.index, &david.public_key().unwrap()).expect("Not David! NOT DAVID!!!!!");
 
-    kristian.proof_of_secret_key.verify(&kristian.index, &kristian.public_key().unwrap());
+    kristian.proof_of_secret_key.verify(&kristian.index, &kristian.public_key().unwrap()).expect("Not Kristian! NOT KRISTIAN!!!");
 
     // Suyash enters round one of the distributed key exchange
     let mut suyash_other_parts: Vec<Participant> = vec![david.clone(),kristian.clone()];
@@ -40,7 +40,7 @@ fn main() -> std::io::Result<()> {
         Err(e) => panic!(" Error producing secret to share: {:?}", e)
         
     };
-    dbg!(&suyash_their_secret_shares);
+    // dbg!(&suyash_their_secret_shares);
 
     /*
     To be done later:
@@ -58,15 +58,14 @@ fn main() -> std::io::Result<()> {
     let mut david_other_parts: Vec<Participant> = vec![suyash.clone(), kristian.clone()];
     let david_state = DistributedKeyGeneration::<_>::new(&params, &david.index, &david_coef, &mut david_other_parts).unwrap();
     let david_their_secret_shares = david_state.their_secret_shares().unwrap(); // You would handle the error in your code and return me the unwrapped value if no error.
-    dbg!(&david_their_secret_shares);
 
     let mut kristian_other_parts: Vec<Participant> = vec![david.clone(), suyash.clone()];
     let kristian_state = DistributedKeyGeneration::<_>::new(&params, &kristian.index, &kristian_coef, &mut kristian_other_parts).unwrap();
     let kristian_their_secret_shares = kristian_state.their_secret_shares().unwrap();
-    dbg!(&kristian_their_secret_shares);
     /* Foreign code ends. Main code starts */
 
     //This is what I have gotten from you two
+    /* WATCH THE INDEXES. Each get a secret made FOR them, BY the other parties. */
     let suyash_my_secret_shares = vec![david_their_secret_shares[0].clone(), kristian_their_secret_shares[1].clone()];
 
     /* Foreign code */
