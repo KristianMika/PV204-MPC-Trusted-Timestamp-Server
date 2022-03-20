@@ -51,10 +51,14 @@ fn main() -> std::io::Result<()> {
     .. David and Kristian have to do the same.
 
     I am gonna create your secret shares here, but in reality I am having these
-    sent from you: (Remove during produciton)
+    sent from you: (Remove during production)
     */
 
     let mut david_other_parts: Vec<Participant> = vec![suyash.clone(), kristian.clone()];
+
+    let david_state = DistributedKeyGeneration::<_>::new(&params, &david.index, &david_coef, &mut david_other_parts).unwrap();
+
+    
 
     Ok(())
 
