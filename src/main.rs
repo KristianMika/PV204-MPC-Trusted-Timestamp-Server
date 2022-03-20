@@ -5,7 +5,7 @@ use frost_dalek::{Parameters, Participant, DistributedKeyGeneration};
 /*
 Comments are mostly summary / comments from the docs.
 */
-fn main() -> std::io::Result<()> {
+fn main() {
     println!("Czech or Slovakia?");
     let params = Parameters { t:2, n:3 };
 
@@ -35,17 +35,17 @@ fn main() -> std::io::Result<()> {
 
     // This is a secret share step. Needs to be done with auth/enc etc. This is what I will share with other participants.
     // From docs: Retrieve a secret share for each other participant, to be given to them at the end of DistributedKeyGeneration::<RoundOne>
-    let suyash_their_secret_shares = match suyash_state.their_secret_shares() {
+    let suyash_gives_secrets = match suyash_state.their_secret_shares() {
         Ok(v) => v,
         Err(e) => panic!(" Error producing secret to share: {:?}", e)
         
     };
-    // dbg!(&suyash_their_secret_shares);
+    // dbg!(&suyash_gives_secrets);
 
     /*
     To be done later:
-    send_to_david(suyash_their_secret_shares)
-    send_to_kristian(suyash_their_secret_shares)
+    send_to_david(suyash_gives_secrets)
+    send_to_kristian(suyash_gives_secrets)
     
     .. David and Kristian have to do the same.
 
@@ -57,31 +57,31 @@ fn main() -> std::io::Result<()> {
 
     let mut david_other_parts: Vec<Participant> = vec![suyash.clone(), kristian.clone()];
     let david_state = DistributedKeyGeneration::<_>::new(&params, &david.index, &david_coef, &mut david_other_parts).unwrap();
-    let david_their_secret_shares = david_state.their_secret_shares().unwrap(); // You would handle the error in your code and return me the unwrapped value if no error.
+    let david_gives_secrets = david_state.their_secret_shares().unwrap(); // You would handle the error in your code and return me the unwrapped value if no error.
 
     let mut kristian_other_parts: Vec<Participant> = vec![david.clone(), suyash.clone()];
     let kristian_state = DistributedKeyGeneration::<_>::new(&params, &kristian.index, &kristian_coef, &mut kristian_other_parts).unwrap();
-    let kristian_their_secret_shares = kristian_state.their_secret_shares().unwrap();
+    let kristian_gives_secrets = kristian_state.their_secret_shares().unwrap();
     /* Foreign code ends. Main code starts */
 
     //This is what I have gotten from you two
     /* WATCH THE INDEXES. Each get a secret made FOR them, BY the other parties. */
-    let suyash_my_secret_shares = vec![david_their_secret_shares[0].clone(), kristian_their_secret_shares[1].clone()];
+    let suyash_gets_secrets = vec![david_gives_secrets[0].clone(), kristian_gives_secrets[1].clone()];
 
     /* Foreign code */
-    let kristian_my_secret_shares = vec![david_their_secret_shares[1].clone(), suyash_their_secret_shares[1].clone()];
-    let david_my_secret_shares = vec![kristian_their_secret_shares[0].clone(), suyash_their_secret_shares[0].clone()];
+    let kristian_gets_secrets = vec![david_gives_secrets[1].clone(), suyash_gives_secrets[1].clone()];
+    let david_gets_secrets = vec![kristian_gives_secrets[0].clone(), suyash_gives_secrets[0].clone()];
 
     //State updates. Advancing to round 2:
 
-    let suyash_state = match suyash_state.to_round_two(suyash_my_secret_shares) {
+    let suyash_state = match suyash_state.to_round_two(suyash_gets_secrets) {
         Ok(v) => v,
         Err(()) => panic!(" Suyash can't move to round 2")
     };
 
     /*Foreign code */
-    let david_state = david_state.to_round_two(david_my_secret_shares).unwrap();
-    let kristian_state = kristian_state.to_round_two(kristian_my_secret_shares).unwrap();
+    let david_state = david_state.to_round_two(david_gets_secrets).unwrap();
+    let kristian_state = kristian_state.to_round_two(kristian_gets_secrets).unwrap();
 
     let (suyash_group_key, suyash_secret_key) = suyash_state.finish(suyash.public_key().unwrap()).unwrap(); //Too tired to make a panic code.
 
@@ -100,7 +100,5 @@ fn main() -> std::io::Result<()> {
     println!("Suyash's public key: {:?}", suyash_public_key);
     println!("Dave's public key: {:?}", david_public_key);
     println!("Kristi's public key: {:?}", kristian_public_key);
-
-    Ok(())
 
 }
