@@ -9,7 +9,7 @@ use std::time::SystemTime;
 #[allow(non_snake_case)]
 pub struct TimestampStruct {
     /// The algorithm to be used for hashing
-    /// TODO: choose to enum
+    /// TODO: change to enum
     hashAlgorithm: String,
     /// The hash of the data
     hashedMessage: String,
