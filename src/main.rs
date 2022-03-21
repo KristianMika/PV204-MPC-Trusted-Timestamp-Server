@@ -6,41 +6,33 @@ use frost_dalek::{Parameters, Participant, DistributedKeyGeneration};
 Comments are mostly summary / comments from the docs.
 */
 fn main() {
-    println!("Czech or Slovakia?");
     let params = Parameters { t:2, n:3 };
 
-    let (david, david_coef) = Participant::new(&params, 1); // The 1 here is called the _participant index_
+    let (david, david_coef) = Participant::new(&params, 1);
     let (kristian, kristian_coef) = Participant::new(&params, 2);
     let (suyash, suyash_coef) = Participant::new(&params, 3);
 
     /*
-    These participant indices need to be agree-ed upon out of scope. We could use our UCO's here. like ID numbers.
+    These participant indices need to be agree-ed upon out of scope. I did it alphabetically. But it also makes for a cool abbreviation: DIKS.
+    Which stands for DIstributed Key Signing.
     As we can also make them public. THat edit will be tried later.
     
-    - Okay these structs by our names need to be shared : david, kritian..
+    These structs by our names need to be shared : david, kristian..
     The corresponding coeffs are private.
-    */
 
-    // Each of us need to verify the other 2 person's zkp by doing this:
-    /* EDIT IN YOUR SERVERS */
+    Each of us need to verify the other 2 person's zkp by doing this:
+
+    !! EDIT IN YOUR SERVERS */
     david.proof_of_secret_key.verify(&david.index, &david.public_key().unwrap()).expect("Not David! NOT DAVID!!!!!");
 
     kristian.proof_of_secret_key.verify(&kristian.index, &kristian.public_key().unwrap()).expect("Not Kristian! NOT KRISTIAN!!!");
 
-    // Suyash enters round one of the distributed key exchange
+    // Round 1 of establishing keys.
     let mut suyash_other_parts: Vec<Participant> = vec![david.clone(),kristian.clone()];
-
-    // I seemingly verify your zkp's again. This time for the purpose of Dist. key gen.
     let suyash_state = DistributedKeyGeneration::<_>::new(&params, &suyash.index, &suyash_coef, &mut suyash_other_parts).unwrap();
 
-    // This is a secret share step. Needs to be done with auth/enc etc. This is what I will share with other participants.
-    // From docs: Retrieve a secret share for each other participant, to be given to them at the end of DistributedKeyGeneration::<RoundOne>
-    let suyash_gives_secrets = match suyash_state.their_secret_shares() {
-        Ok(v) => v,
-        Err(e) => panic!(" Error producing secret to share: {:?}", e)
-        
-    };
-    // dbg!(&suyash_gives_secrets);
+    // This is the secret I will share at the end of my Round 1.
+    let suyash_gives_secrets = suyash_state.their_secret_shares().expect(" Suyash can't create the secretes to share");
 
     /*
     To be done later:
@@ -49,7 +41,7 @@ fn main() {
     
     .. David and Kristian have to do the same.
 
-    Each of us will then have a vector of secret shares from the other participant.
+    Each of us will then have a vector of secret shares from the other participants.
 
     I am gonna create your secret shares here, but in reality I am having these
     sent from you: (Remove during production)
@@ -64,7 +56,7 @@ fn main() {
     let kristian_gives_secrets = kristian_state.their_secret_shares().unwrap();
     /* Foreign code ends. Main code starts */
 
-    //This is what I have gotten from you two
+    //I collate the secrets I received from you 2 into a vector.
     /* WATCH THE INDEXES. Each get a secret made FOR them, BY the other parties. */
     let suyash_gets_secrets = vec![david_gives_secrets[0].clone(), kristian_gives_secrets[1].clone()];
 
@@ -72,7 +64,9 @@ fn main() {
     let kristian_gets_secrets = vec![david_gives_secrets[1].clone(), suyash_gives_secrets[1].clone()];
     let david_gets_secrets = vec![kristian_gives_secrets[0].clone(), suyash_gives_secrets[0].clone()];
 
-    //State updates. Advancing to round 2:
+    // ---------------------------------------------------------------
+    
+    //Round 2 begins. Update the states!
 
     let suyash_state = match suyash_state.to_round_two(suyash_gets_secrets) {
         Ok(v) => v,
@@ -83,13 +77,14 @@ fn main() {
     let david_state = david_state.to_round_two(david_gets_secrets).unwrap();
     let kristian_state = kristian_state.to_round_two(kristian_gets_secrets).unwrap();
 
-    let (suyash_group_key, suyash_secret_key) = suyash_state.finish(suyash.public_key().unwrap()).unwrap(); //Too tired to make a panic code.
+    // Finishing the 2nd round and deriving the group key and secret key from the latest updated state.
+    let (suyash_group_key, suyash_secret_key) = suyash_state.finish(suyash.public_key().expect("Suyash public key access error")).expect("Suyash pooped deriving his group and secret keys");
 
     /*Foreign code */
-
     let (david_group_key, david_secret_key) = david_state.finish(david.public_key().unwrap()).unwrap();
     let (kristian_group_key, kristian_secret_key) = kristian_state.finish(kristian.public_key().unwrap()).unwrap();
 
+    // Checking if we all got the same group keys. Gotta fig out a way to do it in practise.
     assert!(suyash_group_key == kristian_group_key);
     assert!(suyash_group_key == david_group_key);
 
@@ -98,7 +93,7 @@ fn main() {
     let kristian_public_key = kristian_secret_key.to_public();
 
     println!("Suyash's public key: {:?}", suyash_public_key);
-    println!("Dave's public key: {:?}", david_public_key);
+    println!("Davi's public key: {:?}", david_public_key);
     println!("Kristi's public key: {:?}", kristian_public_key);
 
 }
