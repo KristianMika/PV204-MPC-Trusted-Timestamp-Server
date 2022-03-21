@@ -1,6 +1,11 @@
-use std::vec;
+use frost_dalek::{Parameters,
+                Participant,
+                DistributedKeyGeneration,
+                compute_message_hash,
+                generate_commitment_share_lists,
+                SignatureAggregator};
 
-use frost_dalek::{Parameters, Participant, DistributedKeyGeneration};
+use rand::rngs::OsRng;
 
 /*
 Comments are mostly summary / comments from the docs.
@@ -15,7 +20,7 @@ fn main() {
     /*
     These participant indices need to be agree-ed upon out of scope. I did it alphabetically. But it also makes for a cool abbreviation: DIKS.
     Which stands for DIstributed Key Signing.
-    As we can also make them public. THat edit will be tried later.
+    They are kinda public knowledge, but ironically, not public fields of the structs. So in the code we need to know what index to use for what participant.
     
     These structs by our names need to be shared : david, kristian..
     The corresponding coeffs are private.
@@ -84,7 +89,7 @@ fn main() {
     let (david_group_key, david_secret_key) = david_state.finish(david.public_key().unwrap()).unwrap();
     let (kristian_group_key, kristian_secret_key) = kristian_state.finish(kristian.public_key().unwrap()).unwrap();
 
-    // Checking if we all got the same group keys. Gotta fig out a way to do it in practise.
+    // Checking if we all got the same group keys. Since GROUP KEY IS OUR PUBLIC KEY we can virtually "shout it out loud"
     assert!(suyash_group_key == kristian_group_key);
     assert!(suyash_group_key == david_group_key);
 
@@ -96,4 +101,56 @@ fn main() {
     println!("Davi's public key: {:?}", david_public_key);
     println!("Kristi's public key: {:?}", kristian_public_key);
 
+    /*========= KEY ESTABLISHMENT OVER ============= */
+    /*========= Signing ============= */
+
+    let (ash_public_comshares, mut ash_secret_comshares) = generate_commitment_share_lists(&mut OsRng, 3, 1);
+    let (kris_public_comshares, mut kris_secret_comshares) = generate_commitment_share_lists(&mut OsRng, 2, 1);
+    let (dave_public_comshares, mut dave_secret_comshares) = generate_commitment_share_lists(&mut OsRng, 1, 1);
+
+    /* CONTEXT = A byte string, kinda public, pertinent to this application. So this will be a constant for the group. */
+    const CONTEXT: &[u8] = b"PV204_PETR_SVENDA_ANTONIN_DUFKA";
+    let message = b"MV013 sucks. I don't wanna study this course";
+
+    let message_hash = compute_message_hash(&CONTEXT[..], &message[..]);
+
+    /* This aggregator will assign signers, pull in their signatures, and finalise theri sign.
+    The best part is, we don't trust the aggregator. THE AGGREGATOR IS UNTRUSTED. It could be our user, one of us, a standalone app, Dufka, Jennifer Lawrence, anyone we want.*/
+    let mut aggregator = SignatureAggregator::new(params, suyash_group_key.clone(), &CONTEXT[..], &message[..]);
+
+    /*Aggregator nominates Kristian and I */
+    // Don't know where the 0 index in the published_commitment_share is coming from. Right now.
+    aggregator.include_signer(2, kris_public_comshares.commitments[0], kristian_public_key);
+    aggregator.include_signer(3, ash_public_comshares.commitments[0], suyash_public_key);
+
+    /*The aggregator should then publicly announce which participants are expected to be signers. */
+    let signers = aggregator.get_signers();
+    // println!("The signers are: {:?}",signers);
+
+    // No idea what how we get commitment share index
+    let kris_partial = match kristian_secret_key.sign(&message_hash, &kristian_group_key, &mut kris_secret_comshares, 0, signers) {
+        Ok(v) => v,
+        Err(e) => panic!("Kristian is corrupt!!!\n{}",e)
+    };
+    let ash_partial = match suyash_secret_key.sign(&message_hash, &suyash_group_key, &mut ash_secret_comshares, 0, signers) {
+        Ok(v) => v,
+        Err(e) => panic!("Suyash is having some trouble signing:\n{}",e)
+    };
+
+    aggregator.include_partial_signature(kris_partial);
+    aggregator.include_partial_signature(ash_partial);
+
+    /* Aggregation begins */
+
+    let aggregator = match aggregator.finalize() {
+        Ok(v) => v,
+        Err(e) => panic!("Aggregator pooped!\n{:?}",e)
+    };
+
+    let threshold_sign= match aggregator.aggregate() {
+        Ok(v) => v,
+        Err(e) => panic!("Bad signing. Likely corrupted signees or signatures!\n{:?}",e)
+    };
+
+    println!("The message: {:?}\nThe Context: {:?}\nThe Signature: {:?}", &message, &CONTEXT, threshold_sign);
 }

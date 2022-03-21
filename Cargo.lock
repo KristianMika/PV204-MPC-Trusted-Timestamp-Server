@@ -99,6 +99,7 @@ name = "mpc-frost-dalek"
 version = "0.1.0"
 dependencies = [
  "frost-dalek",
+ "rand",
 ]
 
 [[package]]

@@ -6,4 +6,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-frost-dalek = { version = "0.2.3" }
+frost-dalek = "0.2.3"
+rand = "0.7"
