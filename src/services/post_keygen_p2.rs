@@ -1,8 +1,8 @@
-use crate::Mutex;
 use actix_web::web::Data;
 use actix_web::HttpResponse;
 use actix_web::Responder;
 use actix_web::{post, web};
+use std::sync::Mutex;
 use timestamp_server::ServerState;
 
 #[post("/keygen_phase1")]
