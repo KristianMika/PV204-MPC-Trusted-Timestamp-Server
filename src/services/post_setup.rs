@@ -13,5 +13,7 @@ pub async fn post_setup() -> impl Responder {
     // TODO: check the state
 
     // TODO: modify the configuration
+
+    // TODO: update the state
     HttpResponse::Ok()
 }

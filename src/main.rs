@@ -23,6 +23,7 @@ async fn main() -> std::io::Result<()> {
         ));
     }
 
+    // TODO: a temporary CLI arguments handling
     let default_params = Parameters { t: 2, n: 3 };
     let (participant, coefs) = Participant::new(&default_params, argv[1].parse::<u32>().unwrap());
     let server_address = String::from("127.0.0.1:") + &argv[2];
