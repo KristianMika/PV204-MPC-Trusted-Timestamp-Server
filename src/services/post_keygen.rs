@@ -42,13 +42,14 @@ pub async fn post_keygen(state: Data<Mutex<ServerState>>) -> impl Responder {
     // TODO: move instantiation the server state
     let client = reqwest::Client::new();
 
-    for server in state.lock().unwrap().servers.iter() {
-        let res = client
-            .post(String::from(server) + "/keygen_phase1")
-            .json(&to_share)
-            .send()
-            .await;
-    }
+    // TODO: The serialization issue
+    // for server in state.lock().unwrap().servers.iter() {
+    //     let res = client
+    //         .post(String::from(server) + "/keygen_phase1")
+    //         .json(&to_share)
+    //         .send()
+    //         .await;
+    // }
 
     // TODO: trigger key generation phase 2
     HttpResponse::Ok()
