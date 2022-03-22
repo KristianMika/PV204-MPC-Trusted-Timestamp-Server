@@ -107,10 +107,6 @@ fn main() {
     let david_public_key = david_secret_key.to_public();
     let kristian_public_key = kristian_secret_key.to_public();
 
-    // println!("Suyash's public key: {:?}", suyash_public_key);
-    // println!("Davi's public key: {:?}", david_public_key);
-    // println!("Kristi's public key: {:?}", kristian_public_key);
-
     /*========= KEY ESTABLISHMENT OVER ============= */
 
 
@@ -136,13 +132,7 @@ fn main() {
     let mut hasher = Sha256::new();
     hasher.update(file_hash);
     hasher.update(timestr);
-    let fin_hash = hasher.finalize();
-
-
-
-
-
-
+    let fin_hash = hasher.finalize(); // Final hash of the timestamp and the file hash
 
     let message_hash = compute_message_hash(&CONTEXT[..], &fin_hash[..]);
 
