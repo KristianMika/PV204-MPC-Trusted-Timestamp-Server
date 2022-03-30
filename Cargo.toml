@@ -15,6 +15,7 @@ futures = "0.3"
 sha2 = "0.10"
 hex = "0.4"
 frost-dalek = "0.2.3"
+rust-fsm = "0.6.0"
 
 [env]
 SERVER_PORT="8083"

@@ -1,3 +1,5 @@
+
+
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 use frost_dalek::Parameters;
@@ -7,6 +9,8 @@ use timestamp_server::ServerState;
 mod services;
 use services::*;
 use std::env;
+
+
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -28,6 +32,10 @@ async fn main() -> std::io::Result<()> {
     let (participant, coefs) = Participant::new(&default_params, argv[1].parse::<u32>().unwrap());
     let server_address = String::from("127.0.0.1:") + &argv[2];
     let servers = vec![argv[3].clone(), argv[4].clone()];
+    
+    // let _ = machine.consume(&StateAutomataInput::Setup);
+
+
     let server_state = Data::new(Mutex::new(ServerState::new(
         participant,
         coefs,
