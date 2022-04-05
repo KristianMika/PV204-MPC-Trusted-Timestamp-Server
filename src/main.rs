@@ -27,6 +27,11 @@ fn main() {
     let (david, david_coef) = Participant::new(&params, 1);
     let (kristian, kristian_coef) = Participant::new(&params, 2);
     let (suyash, suyash_coef) = Participant::new(&params, 3);
+    // let (s2, sc2) = Participant::new(&params, 3);
+    // dbg!(&suyash);
+    // dbg!(&suyash_coef);
+    // dbg!(&s2);
+    // dbg!(&sc2);
     /*
     These participant indices need to be agree-ed upon out of scope. I did it alphabetically. But it also makes for a cool abbreviation: DIKS.
     Which stands for DIstributed Key Signing.
@@ -48,6 +53,8 @@ fn main() {
 
     // This is the secret I will share at the end of my Round 1.
     let suyash_gives_secrets = suyash_state.their_secret_shares().expect(" Suyash can't create the secretes to share");
+
+    println!("The secrets Suyash[0] is gonna give contains:\nindex as {}\nPolynomial evaluated as: {:?}",&suyash_gives_secrets[0].index, &suyash_gives_secrets[0].polynomial_evaluation);
 
     /*
     To be done later:
@@ -136,7 +143,7 @@ fn main() {
 
     let message_hash = compute_message_hash(&CONTEXT[..], &fin_hash[..]);
 
-    /* This aggregator will assign signers, pull in their signatures, and finalise theri sign.
+    /* This aggregator will assign signers, pull in their signatures, and finalise their sign.
     The best part is, we don't trust the aggregator. THE AGGREGATOR IS UNTRUSTED. It could be our user, one of us, a standalone app, Dufka, Jennifer Lawrence, anyone we want.*/
     let mut aggregator = SignatureAggregator::new(params, suyash_group_key.clone(), &CONTEXT[..], &fin_hash[..]);
 
@@ -159,6 +166,10 @@ fn main() {
         Err(e) => panic!("Suyash is having some trouble signing:\n{}",e)
     };
 
+    // println!("The Partial signature index is: {} and Scalar is: {:?}", &kris_partial.index, &kris_partial.z);
+    // let kris_ps_string = format!("{:?}",&kris_partial);
+    // println!("{}",kris_ps_string);
+
     aggregator.include_partial_signature(kris_partial);
     aggregator.include_partial_signature(ash_partial);
 
@@ -174,7 +185,6 @@ fn main() {
         Err(e) => panic!("Bad signing. Likely corrupted signees or signatures!\n{:?}",e)
     };
 
-    println!("The message: {:?}\nThe Context: {:?}\nThe Timestamp: {:?}\nThe Signature: {:?}", &fin_hash, &CONTEXT,  timestr, threshold_sign);
-
+    // println!("The message: {:?}\nThe Context: {:?}\nThe Timestamp: {:?}\nThe Signature: {:?}", &fin_hash, &CONTEXT,  timestr, threshold_sign);
 
 }

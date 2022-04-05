@@ -72,13 +72,12 @@ dependencies = [
 
 [[package]]
 name = "curve25519-dalek"
-version = "3.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90f9d052967f590a76e62eb387bd0bbb1b000182c3cefe5364db6b7211651bc0"
+version = "3.2.0"
 dependencies = [
  "byteorder",
  "digest 0.9.0",
  "rand_core",
+ "serde",
  "subtle",
  "zeroize",
 ]
@@ -103,13 +102,34 @@ dependencies = [
 ]
 
 [[package]]
-name = "frost-dalek"
-version = "0.2.3"
+name = "ed25519"
+version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "040dd19f43482e00e6f69c19f9a9116348e78fcac29ebb5d5ae38c1049bf0e5a"
+checksum = "3d5c4b5e5959dc2c2b89918d8e2cc40fcdd623cef026ed09d2f0ee05199dc8e4"
+dependencies = [
+ "signature",
+]
+
+[[package]]
+name = "ed25519-dalek"
+version = "1.0.1"
 dependencies = [
  "curve25519-dalek",
+ "ed25519",
  "rand",
+ "serde",
+ "sha2 0.9.9",
+ "zeroize",
+]
+
+[[package]]
+name = "frost-dalek"
+version = "0.2.3"
+dependencies = [
+ "curve25519-dalek",
+ "ed25519-dalek",
+ "rand",
+ "serde",
  "sha2 0.9.9",
  "subtle",
  "zeroize",
@@ -153,9 +173,11 @@ name = "mpc-frost-dalek"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "curve25519-dalek",
  "frost-dalek",
  "hex",
  "rand",
+ "serde",
  "sha2 0.10.2",
 ]
 
@@ -250,6 +272,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde"
+version = "1.0.136"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ce31e24b01e1e524df96f1c2fdd054405f8d7376249a5110886fb4b658484789"
+dependencies = [
+ "serde_derive",
+]
+
+[[package]]
+name = "serde_derive"
+version = "1.0.136"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "08597e7152fcd306f41838ed3e37be9eaeed2b61c42e2117266a554fab4662f9"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "sha2"
 version = "0.9.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -272,6 +314,12 @@ dependencies = [
  "cpufeatures",
  "digest 0.10.3",
 ]
+
+[[package]]
+name = "signature"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f054c6c1a6e95179d6f23ed974060dcefb2d9388bb7256900badad682c499de4"
 
 [[package]]
 name = "subtle"
