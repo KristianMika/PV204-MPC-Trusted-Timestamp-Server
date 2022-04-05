@@ -4,9 +4,11 @@ use frost_dalek::{Parameters,
                 DistributedKeyGeneration,
                 compute_message_hash,
                 generate_commitment_share_lists,
-                SignatureAggregator};
+                SignatureAggregator, signature::PartialThresholdSignature};
 
+use mpc_frost_dalek::{serde_partsign, PartSignSerded, deser_partsign};
 use rand::rngs::OsRng;
+use serde::Serialize;
 use std::time::SystemTime;
 use chrono::offset::Utc;
 use chrono::DateTime;
@@ -169,6 +171,13 @@ fn main() {
     // println!("The Partial signature index is: {} and Scalar is: {:?}", &kris_partial.index, &kris_partial.z);
     // let kris_ps_string = format!("{:?}",&kris_partial);
     // println!("{}",kris_ps_string);
+    let krisserded = serde_partsign(kris_partial);
+    let krissere = serde_json::to_string(&krisserded).unwrap();
+    println!("JSON'd Partial Threshold Signature: {}",krissere);
+
+    let resurrect_kris : PartSignSerded = serde_json::from_str(&krissere).unwrap();
+    let kris_partial = deser_partsign(resurrect_kris);
+
 
     aggregator.include_partial_signature(kris_partial);
     aggregator.include_partial_signature(ash_partial);
@@ -185,6 +194,6 @@ fn main() {
         Err(e) => panic!("Bad signing. Likely corrupted signees or signatures!\n{:?}",e)
     };
 
-    // println!("The message: {:?}\nThe Context: {:?}\nThe Timestamp: {:?}\nThe Signature: {:?}", &fin_hash, &CONTEXT,  timestr, threshold_sign);
+    println!("The message: {:?}\nThe Context: {:?}\nThe Timestamp: {:?}\nThe Signature: {:?}", &fin_hash, &CONTEXT,  timestr, threshold_sign);
 
 }

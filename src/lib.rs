@@ -22,5 +22,8 @@ pub fn serde_partsign(ps : PartialThresholdSignature) -> PartSignSerded {       
 }
 
 pub fn deser_partsign(pss : PartSignSerded) -> PartialThresholdSignature {
+    /*
+    Reconvert pseudo structures to their native xxx-dalek compliant Stuctures.
+    */
     PartialThresholdSignature { index: pss.index, z: Scalar { bytes: pss.z } }
 }
