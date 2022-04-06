@@ -4,7 +4,11 @@ use frost_dalek::{Parameters,
                 DistributedKeyGeneration,
                 compute_message_hash,
                 generate_commitment_share_lists,
-                SignatureAggregator, signature::PartialThresholdSignature, precomputation::PublicCommitmentShareList, IndividualPublicKey};
+                SignatureAggregator,
+                signature::PartialThresholdSignature,
+                precomputation::PublicCommitmentShareList,
+                IndividualPublicKey,
+                keygen::SecretShare};
 
 use mpc_frost_dalek::*;
 use rand::rngs::OsRng;
@@ -78,6 +82,13 @@ fn main() {
     let mut kristian_other_parts: Vec<Participant> = vec![david.clone(), suyash.clone()];
     let kristian_state = DistributedKeyGeneration::<_>::new(&params, &kristian.index, &kristian_coef, &mut kristian_other_parts).unwrap();
     let kristian_gives_secrets = kristian_state.their_secret_shares().unwrap();
+
+    let kgb = serde_json::to_string(&kristian_gives_secrets).unwrap();
+    println!("***** KGB ******\n{}", &kgb);
+
+    let kristian_gives_secrets: Vec<SecretShare> = serde_json::from_str(&kgb[..]).unwrap();
+
+
     /* Foreign code ends. Main code starts */
 
     //I collate the secrets I received from you 2 into a vector.
