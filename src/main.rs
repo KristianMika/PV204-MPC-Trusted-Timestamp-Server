@@ -4,11 +4,10 @@ use frost_dalek::{Parameters,
                 DistributedKeyGeneration,
                 compute_message_hash,
                 generate_commitment_share_lists,
-                SignatureAggregator, signature::PartialThresholdSignature};
+                SignatureAggregator};
 
-use mpc_frost_dalek::{serde_partsign, PartSignSerded, deser_partsign};
+use mpc_frost_dalek::*;
 use rand::rngs::OsRng;
-use serde::Serialize;
 use std::time::SystemTime;
 use chrono::offset::Utc;
 use chrono::DateTime;
@@ -171,12 +170,12 @@ fn main() {
     // println!("The Partial signature index is: {} and Scalar is: {:?}", &kris_partial.index, &kris_partial.z);
     // let kris_ps_string = format!("{:?}",&kris_partial);
     // println!("{}",kris_ps_string);
-    let krisserded = serde_partsign(kris_partial);
+    let krisserded = SerdedPartSign::murder(kris_partial);
     let krissere = serde_json::to_string(&krisserded).unwrap();
     println!("JSON'd Partial Threshold Signature: {}",krissere);
 
-    let resurrect_kris : PartSignSerded = serde_json::from_str(&krissere).unwrap();
-    let kris_partial = deser_partsign(resurrect_kris);
+    let resurrect_kris : SerdedPartSign = serde_json::from_str(&krissere).unwrap();
+    let kris_partial = resurrect_kris.resurrect();
 
 
     aggregator.include_partial_signature(kris_partial);
