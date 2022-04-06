@@ -1,8 +1,21 @@
+use std::fmt::Debug;
+
 use frost_dalek::signature::PartialThresholdSignature;
 use serde::{ Serialize, Deserialize };
 use curve25519_dalek::{scalar::Scalar, ristretto::RistrettoPoint};
 
+/*
 
+Brave attempt. Problem in having `impl Trait` as a function header description in trait. Will look for a workaound later cause there has to be.
+trait Palpatine {}
+impl Palpatine for RistrettoPoint {}
+impl Palpatine for PartialThresholdSignature {}
+
+trait Plagueis {
+    fn murder(lord: impl Palpatine) -> Self;
+    fn resurrect(self) -> impl Palpatine;
+}
+*/
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SerdedPartSign {
     index : u32,
@@ -31,8 +44,13 @@ impl SerdedPartSign {
     }
 }
 #[derive(Debug,Serialize,Deserialize)]
-pub struct RistrettoSerded( [u64; 5] );
+pub struct SerdedRistretto( [u64; 5] );
+impl SerdedRistretto {
+    pub fn murder(ris : RistrettoPoint) -> Self {
+        SerdedRistretto([0; 5])
+    }
 
-pub fn serde_ristretto(ris : RistrettoPoint) -> RistrettoSerded {
-    RistrettoSerded([0; 5])
+    pub fn resurrect(self) -> impl Debug {
+
+    }
 }

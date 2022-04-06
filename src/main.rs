@@ -175,7 +175,7 @@ fn main() {
     println!("JSON'd Partial Threshold Signature: {}",krissere);
 
     let resurrect_kris : SerdedPartSign = serde_json::from_str(&krissere).unwrap();
-    let kris_partial = resurrect_kris.resurrect();
+    let kris_partial = resurrect_kris.resurrect(); 
 
 
     aggregator.include_partial_signature(kris_partial);
