@@ -4,7 +4,7 @@ use frost_dalek::{Parameters,
                 DistributedKeyGeneration,
                 compute_message_hash,
                 generate_commitment_share_lists,
-                SignatureAggregator};
+                SignatureAggregator, signature::PartialThresholdSignature, precomputation::PublicCommitmentShareList};
 
 use mpc_frost_dalek::*;
 use rand::rngs::OsRng;
@@ -124,6 +124,11 @@ fn main() {
     let (kris_public_comshares, mut kris_secret_comshares) = generate_commitment_share_lists(&mut OsRng, 2, 1);
     let (dave_public_comshares, mut dave_secret_comshares) = generate_commitment_share_lists(&mut OsRng, 1, 1);
 
+
+    let kris_pub_comshares_ser = serde_json::to_string(&kris_public_comshares).unwrap();
+    println!("Kris's public commitments are as follows:\n{}", kris_pub_comshares_ser);
+
+    let kris_public_comshares: PublicCommitmentShareList = serde_json::from_str(&kris_pub_comshares_ser[..]).unwrap();
     /* CONTEXT = A byte string, kinda public, pertinent to this application. So this will be a constant for the group. */
     const CONTEXT: &[u8] = b"PV204_PETR_SVENDA_ANTONIN_DUFKA";
 
@@ -167,15 +172,20 @@ fn main() {
         Err(e) => panic!("Suyash is having some trouble signing:\n{}",e)
     };
 
-    // println!("The Partial signature index is: {} and Scalar is: {:?}", &kris_partial.index, &kris_partial.z);
-    // let kris_ps_string = format!("{:?}",&kris_partial);
-    // println!("{}",kris_ps_string);
-    let krisserded = SerdedPartSign::murder(kris_partial);
-    let krissere = serde_json::to_string(&krisserded).unwrap();
+
+    // let krisserded = SerdedPartSign::murder(kris_partial);
+    // let krissere = serde_json::to_string(&krisserded).unwrap();
+    // println!("JSON'd Partial Threshold Signature: {}",krissere);
+
+    // let resurrect_kris : SerdedPartSign = serde_json::from_str(&krissere).unwrap();
+    // let kris_partial = resurrect_kris.resurrect(); 
+
+
+    let krissere = serde_json::to_string(&kris_partial).unwrap();
     println!("JSON'd Partial Threshold Signature: {}",krissere);
 
-    let resurrect_kris : SerdedPartSign = serde_json::from_str(&krissere).unwrap();
-    let kris_partial = resurrect_kris.resurrect(); 
+    let kris_partial : PartialThresholdSignature = serde_json::from_str(&krissere[..]).unwrap();
+    // let kris_partial = resurrect_kris.resurrect(); 
 
 
     aggregator.include_partial_signature(kris_partial);

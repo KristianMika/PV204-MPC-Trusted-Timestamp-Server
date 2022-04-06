@@ -77,6 +77,19 @@ dependencies = [
  "byteorder",
  "digest 0.9.0",
  "rand_core",
+ "subtle",
+ "zeroize",
+]
+
+[[package]]
+name = "curve25519-dalek"
+version = "3.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "90f9d052967f590a76e62eb387bd0bbb1b000182c3cefe5364db6b7211651bc0"
+dependencies = [
+ "byteorder",
+ "digest 0.9.0",
+ "rand_core",
  "serde",
  "subtle",
  "zeroize",
@@ -114,7 +127,7 @@ dependencies = [
 name = "ed25519-dalek"
 version = "1.0.1"
 dependencies = [
- "curve25519-dalek",
+ "curve25519-dalek 3.2.0",
  "ed25519",
  "rand",
  "serde",
@@ -126,7 +139,7 @@ dependencies = [
 name = "frost-dalek"
 version = "0.2.3"
 dependencies = [
- "curve25519-dalek",
+ "curve25519-dalek 3.2.1",
  "ed25519-dalek",
  "rand",
  "serde",
@@ -179,7 +192,7 @@ name = "mpc-frost-dalek"
 version = "0.1.0"
 dependencies = [
  "chrono",
- "curve25519-dalek",
+ "curve25519-dalek 3.2.1",
  "frost-dalek",
  "hex",
  "rand",

@@ -2,7 +2,11 @@ use std::fmt::Debug;
 
 use frost_dalek::signature::PartialThresholdSignature;
 use serde::{ Serialize, Deserialize };
-use curve25519_dalek::{scalar::Scalar, ristretto::RistrettoPoint};
+use curve25519_dalek::{ scalar::Scalar,
+                        ristretto::RistrettoPoint,
+                        edwards::EdwardsPoint,
+                        // field::FieldElement
+                    };
 
 /*
 
@@ -16,41 +20,58 @@ trait Plagueis {
     fn resurrect(self) -> impl Palpatine;
 }
 */
-#[derive(Serialize, Deserialize, Debug)]
-pub struct SerdedPartSign {
-    index : u32,
-    z : [u8; 32]
-}
-impl SerdedPartSign {
-    pub fn murder(lord : PartialThresholdSignature) -> Self {         // Notice Partial Signature is being moved here.
 
-        /*
-        Converts PartialThresholdSignature to an equivalent Structure that implements SER and DE.
-        Never use it elsewhere.
-        */
 
-        SerdedPartSign {
-            index: lord.index,
-            z: lord.z.bytes
-        }
+// #[derive(Serialize, Deserialize, Debug)]
+// pub struct SerdedPartSign {
+//     index : u32,
+//     scalar: Scalar
+// }
+// impl SerdedPartSign {
+//     pub fn murder(lord : PartialThresholdSignature) -> Self {         // Notice Partial Signature is being moved here.
+
+//         /*
+//         Converts PartialThresholdSignature to an equivalent Structure that implements SER and DE.
+//         Never use it elsewhere.
+//         */
+
+//         SerdedPartSign {
+//             index: lord.index,
+//             scalar: lord.z
+//         }
         
-    }
+//     }
 
-    pub fn resurrect(self) -> PartialThresholdSignature {
-        /*
-        Reconvert pseudo structures to their native xxx-dalek compliant Stuctures.
-        */
-        PartialThresholdSignature { index: self.index, z: Scalar { bytes: self.z } }
-    }
-}
-#[derive(Debug,Serialize,Deserialize)]
-pub struct SerdedRistretto( [u64; 5] );
-impl SerdedRistretto {
-    pub fn murder(ris : RistrettoPoint) -> Self {
-        SerdedRistretto([0; 5])
-    }
+//     pub fn resurrect(self) -> PartialThresholdSignature {
+//         /*
+//         Reconvert pseudo structures to their native xxx-dalek compliant Stuctures.
+//         */
+//         // PartialThresholdSignature { index: self.index, z: Scalar { bytes: self.z } }
+//         PartialThresholdSignature { index: self.index, z: self.scalar }
+//     }
+// }
+// #[derive(Debug, Serialize, Deserialize)]
+// pub struct Edgy( EdwardsPoint );
 
-    pub fn resurrect(self) -> impl Debug {
+// #[derive(Debug,Serialize,Deserialize)]
+// pub struct SerdedRistretto( [[u8; 32]; 4] );
+// impl SerdedRistretto {
+//     pub fn murder(lord : RistrettoPoint) -> Self {
+//         SerdedRistretto(
+//             [
+//                 lord.0.X.to_bytes(),
+//                 lord.0.Y.to_bytes(),
+//                 lord.0.Z.to_bytes(),
+//                 lord.0.T.to_bytes(),
+//             ]
+//         )
+//     }
 
-    }
-}
+    // pub fn resurrect(self) -> RistrettoPoint {
+    //     RistrettoPoint(
+    //         EdwardsPoint(
+    //             X: FieldElement
+    //         )
+    //     )
+    // }
+// }
