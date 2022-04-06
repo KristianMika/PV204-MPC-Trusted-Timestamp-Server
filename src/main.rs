@@ -1,4 +1,3 @@
-// use mpc_frost_dalek::*;
 use frost_dalek::{Parameters,
                 Participant,
                 DistributedKeyGeneration,
@@ -9,10 +8,7 @@ use frost_dalek::{Parameters,
                 precomputation::PublicCommitmentShareList,
                 IndividualPublicKey,
                 keygen::SecretShare};
-
-use mpc_frost_dalek::*;
 use rand::rngs::OsRng;
-use serde_json::value::Index;
 use std::time::SystemTime;
 use chrono::offset::Utc;
 use chrono::DateTime;
