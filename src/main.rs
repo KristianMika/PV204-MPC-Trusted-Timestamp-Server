@@ -33,11 +33,11 @@ fn main() {
     let (david, david_coef) = Participant::new(&params, 1);
     let (kristian, kristian_coef) = Participant::new(&params, 2);
     let (suyash, suyash_coef) = Participant::new(&params, 3);
-    // let (s2, sc2) = Participant::new(&params, 3);
-    // dbg!(&suyash);
-    // dbg!(&suyash_coef);
-    // dbg!(&s2);
-    // dbg!(&sc2);
+    
+    let kgb = serde_json::to_string(&kristian).unwrap();
+    // println!("***** KGB ******\n{}", &kgb);
+
+    let kristian: Participant = serde_json::from_str(&kgb[..]).unwrap();
     /*
     These participant indices need to be agree-ed upon out of scope. I did it alphabetically. But it also makes for a cool abbreviation: DIKS.
     Which stands for DIstributed Key Signing.
@@ -84,7 +84,7 @@ fn main() {
     let kristian_gives_secrets = kristian_state.their_secret_shares().unwrap();
 
     let kgb = serde_json::to_string(&kristian_gives_secrets).unwrap();
-    println!("***** KGB ******\n{}", &kgb);
+    // println!("***** KGB ******\n{}", &kgb);
 
     let kristian_gives_secrets: Vec<SecretShare> = serde_json::from_str(&kgb[..]).unwrap();
 
@@ -128,7 +128,7 @@ fn main() {
     let kristian_public_key = kristian_secret_key.to_public();
 
     let pubkeyserde = serde_json::to_string(&kristian_public_key).unwrap();
-    println!("Kris Public Key:\n{}", &pubkeyserde);
+    // println!("Kris Public Key:\n{}", &pubkeyserde);
 
     let kristian_public_key: IndividualPublicKey = serde_json::from_str(&pubkeyserde[..]).unwrap();
 
