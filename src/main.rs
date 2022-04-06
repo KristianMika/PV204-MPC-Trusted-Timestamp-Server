@@ -4,10 +4,11 @@ use frost_dalek::{Parameters,
                 DistributedKeyGeneration,
                 compute_message_hash,
                 generate_commitment_share_lists,
-                SignatureAggregator, signature::PartialThresholdSignature, precomputation::PublicCommitmentShareList};
+                SignatureAggregator, signature::PartialThresholdSignature, precomputation::PublicCommitmentShareList, IndividualPublicKey};
 
 use mpc_frost_dalek::*;
 use rand::rngs::OsRng;
+use serde_json::value::Index;
 use std::time::SystemTime;
 use chrono::offset::Utc;
 use chrono::DateTime;
@@ -115,6 +116,11 @@ fn main() {
     let david_public_key = david_secret_key.to_public();
     let kristian_public_key = kristian_secret_key.to_public();
 
+    let pubkeyserde = serde_json::to_string(&kristian_public_key).unwrap();
+    println!("Kris Public Key:\n{}", &pubkeyserde);
+
+    let kristian_public_key: IndividualPublicKey = serde_json::from_str(&pubkeyserde[..]).unwrap();
+
     /*========= KEY ESTABLISHMENT OVER ============= */
 
 
@@ -126,9 +132,11 @@ fn main() {
 
 
     let kris_pub_comshares_ser = serde_json::to_string(&kris_public_comshares).unwrap();
-    println!("Kris's public commitments are as follows:\n{}", kris_pub_comshares_ser);
+    // println!("Kris's public commitments are as follows:\n{}", kris_pub_comshares_ser);
 
     let kris_public_comshares: PublicCommitmentShareList = serde_json::from_str(&kris_pub_comshares_ser[..]).unwrap();
+
+
     /* CONTEXT = A byte string, kinda public, pertinent to this application. So this will be a constant for the group. */
     const CONTEXT: &[u8] = b"PV204_PETR_SVENDA_ANTONIN_DUFKA";
 
@@ -182,7 +190,7 @@ fn main() {
 
 
     let krissere = serde_json::to_string(&kris_partial).unwrap();
-    println!("JSON'd Partial Threshold Signature: {}",krissere);
+    // println!("JSON'd Partial Threshold Signature: {}",krissere);
 
     let kris_partial : PartialThresholdSignature = serde_json::from_str(&krissere[..]).unwrap();
     // let kris_partial = resurrect_kris.resurrect(); 
