@@ -19,7 +19,7 @@ rustdoc-args = ["--html-in-header", "/opt/rustwide/workdir/docs/assets/rustdoc-i
 [dependencies]
 # curve25519-dalek = { path = "curve25519-dalek", default-features = false }
 curve25519-dalek = { version = "3", features = ["serde"]}
-ed25519-dalek = { path = "ed25519-dalek", default-features = false }
+ed25519-dalek = { version = "1", default-features = false }
 rand = { version = "0.7" }
 sha2 = { version = "0.9" }
 subtle = { version = "2.4", default-features = false }
