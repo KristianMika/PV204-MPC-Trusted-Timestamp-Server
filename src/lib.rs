@@ -10,6 +10,7 @@
 
 /*
 
+
 Brave attempt. Problem in having `impl Trait` as a function header description in trait. Will look for a workaound later cause there has to be.
 trait Palpatine {}
 impl Palpatine for RistrettoPoint {}
