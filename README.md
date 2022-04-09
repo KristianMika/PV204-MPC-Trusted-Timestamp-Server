@@ -11,7 +11,7 @@ The build uses [rust-musl-builder](https://github.com/emk/rust-musl-builder).
 
 ```bash
 alias rust-musl-builder='docker run --rm -it -v "$(pwd)":/home/rust/src ekidd/rust-musl-builder'
-rust-musl-builder cargo build --release
+rust-musl-builder cargo build # TODO: add --release before the assignment submission
 ```
 ### Regular build
 ```bash
