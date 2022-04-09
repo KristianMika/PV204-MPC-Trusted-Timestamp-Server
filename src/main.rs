@@ -3,7 +3,7 @@ use actix_web::{App, HttpServer};
 use frost_dalek::Parameters;
 use frost_dalek::Participant;
 use std::sync::Mutex;
-use timestamp_server::{ServerState, Config};
+use timestamp_server::{Config, ServerState};
 mod services;
 use services::*;
 use std::env;
@@ -11,7 +11,7 @@ use std::env;
 mod utils;
 use utils::*;
 
-const CONFIG_PATH:&str = "config/config.toml"; 
+const CONFIG_PATH: &str = "config/config.toml";
 
 // TODO: consider anyhow
 // TODO: use an automata and track states + check transitions
@@ -20,28 +20,34 @@ async fn main() -> std::io::Result<()> {
     env_logger::init();
     let server_index: String = match env::var("SERVER_INDEX") {
         Ok(val) => val,
-        Err(_) => panic!("SERVER_INDEX is not set.")
+        Err(_) => panic!("SERVER_INDEX is not set."),
     };
-    let server_index: u32 = match server_index.parse(){
+    let server_index: u32 = match server_index.parse() {
         Ok(val) => val,
-        Err(_) => panic!("Invalid SERVER_INDEX value: {}", server_index)
+        Err(_) => panic!("Invalid SERVER_INDEX value: {}", server_index),
     };
-    log::info!(
-        "Starting server with index {}.", server_index
-    );
+    log::info!("Starting server with index {}.", server_index);
 
     let config: Config = match read_config(CONFIG_PATH) {
         Ok(val) => val,
-        Err(_) => panic!("Could not read/parse the config file at path {}.", CONFIG_PATH)
+        Err(_) => panic!(
+            "Could not read/parse the config file at path {}.",
+            CONFIG_PATH
+        ),
     };
 
-    log::info!(
-        "Successfully loaded the config file."
-    );
+    log::info!("Successfully loaded the config file.");
 
-    let parameters = Parameters { t: config.t, n: config.n };
+    let parameters = Parameters {
+        t: config.t,
+        n: config.n,
+    };
     let (participant, coefs) = Participant::new(&parameters, server_index);
-    let server_address = format!("{ip}:{port}", ip=String::from("127.0.0.1"), port= &config.port.to_string());
+    let server_address = format!(
+        "{ip}:{port}",
+        ip = String::from("127.0.0.1"),
+        port = &config.port.to_string()
+    );
     let server_state = Data::new(Mutex::new(ServerState::new(
         participant,
         coefs,

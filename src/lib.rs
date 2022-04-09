@@ -1,7 +1,7 @@
 use frost_dalek::keygen::Coefficients;
 use frost_dalek::Parameters;
 use frost_dalek::Participant;
-use serde::{Deserialize};
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct Config {
@@ -10,7 +10,7 @@ pub struct Config {
     /// the port of this server
     pub port: u16,
     pub t: u32,
-    pub n:u32
+    pub n: u32,
 }
 
 /// Holds the state of the server, configuration, keys, etc.
