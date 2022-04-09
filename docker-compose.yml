@@ -1,0 +1,21 @@
+version: "3"
+
+services:
+  server1:
+    image: diks-tits:latest
+    environment:
+      SERVER_INDEX: 1
+    volumes:
+      - ./config/:/config/
+  server2:
+    image: diks-tits:latest
+    environment:
+      SERVER_INDEX: 2
+    volumes:
+      - ./config/:/config/
+  server3:
+    image: diks-tits:latest
+    environment:
+      SERVER_INDEX: 3
+    volumes:
+      - ./config/:/config/
