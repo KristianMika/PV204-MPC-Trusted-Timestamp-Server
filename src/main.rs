@@ -3,23 +3,15 @@ use actix_web::{App, HttpServer};
 use frost_dalek::Parameters;
 use frost_dalek::Participant;
 use std::sync::Mutex;
-use timestamp_server::ServerState;
+use timestamp_server::{ServerState, Config};
 mod services;
 use services::*;
 use std::env;
-use serde::{Deserialize};
 
-
-#[derive(Deserialize)]
-struct Config {
-    servers: Vec<String>
-}
+mod utils;
+use utils::*;
 
 const CONFIG_PATH:&str = "config/config.toml"; 
-fn read_config() -> std::io::Result<Config> {
-    let content = std::fs::read_to_string(CONFIG_PATH)?;
-    Ok(toml::from_str(&content)?)
-}
 
 // TODO: consider anyhow
 // TODO: use an automata and track states + check transitions
@@ -30,7 +22,7 @@ async fn main() -> std::io::Result<()> {
         Ok(val) => val,
         Err(_) => panic!("SERVER_INDEX is not set.")
     };
-    let server_index: i32 = match server_index.parse(){
+    let server_index: u32 = match server_index.parse(){
         Ok(val) => val,
         Err(_) => panic!("Invalid SERVER_INDEX value: {}", server_index)
     };
@@ -38,7 +30,7 @@ async fn main() -> std::io::Result<()> {
         "Starting server with index {}.", server_index
     );
 
-    let config: Config = match read_config() {
+    let config: Config = match read_config(CONFIG_PATH) {
         Ok(val) => val,
         Err(_) => panic!("Could not read/parse the config file at path {}.", CONFIG_PATH)
     };
@@ -47,28 +39,18 @@ async fn main() -> std::io::Result<()> {
         "Successfully loaded the config file."
     );
 
-    // TODO: load from env variables / a config file
-    let argv: Vec<String> = env::args().collect();
-
-    // if argv.len() != 5 {
-    //     return Err(std::io::Error::new(
-    //         std::io::ErrorKind::Other,
-    //         "Current tmp usage: cargo run [server_id] [server_port] [ip2:port2] [ip3:port3]",
-    //     ));
-    // }
-
-    // TODO: a temporary CLI arguments handling
-    let default_params = Parameters { t: 2, n: 3 };
-    let (participant, coefs) = Participant::new(&default_params, argv[1].parse::<u32>().unwrap());
-    let server_address = String::from("127.0.0.1:") + &argv[2];
-    let servers = vec![argv[3].clone(), argv[4].clone()];
+    let parameters = Parameters { t: config.t, n: config.n };
+    let (participant, coefs) = Participant::new(&parameters, server_index);
+    let server_address = format!("{ip}:{port}", ip=String::from("127.0.0.1"), port= &config.port.to_string());
     let server_state = Data::new(Mutex::new(ServerState::new(
         participant,
         coefs,
-        default_params,
-        servers,
+        parameters,
+        config.servers,
         vec![],
     )));
+
+    log::info!("Starting the server at {}.", server_address);
     HttpServer::new(move || {
         App::new()
             .app_data(Data::clone(&server_state))

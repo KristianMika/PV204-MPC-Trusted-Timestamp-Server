@@ -1,1 +1,4 @@
 servers = ["server1:8080", "server2:8080", "server3:8080"]
+port = 8080
+t = 2
+n = 3
