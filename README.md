@@ -28,5 +28,6 @@ docker build . --tag diks-tits:latest
 ```
 2. Run Docker compose
 ```bash
+docker-compose down
 docker-compose up
 ```
