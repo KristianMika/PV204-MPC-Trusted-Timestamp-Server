@@ -31,3 +31,5 @@ docker build . --tag diks-tits:latest
 docker-compose down
 docker-compose up
 ```
+
+The individual servers 1 - 3 are accessible on localhost:{8081-8083}.
