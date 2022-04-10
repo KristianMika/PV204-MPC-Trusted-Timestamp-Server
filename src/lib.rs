@@ -1,6 +1,17 @@
 use frost_dalek::keygen::Coefficients;
 use frost_dalek::Parameters;
 use frost_dalek::Participant;
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+pub struct Config {
+    /// a list of all server IPs includes this one
+    pub servers: Vec<String>,
+    /// the port of this server
+    pub port: u16,
+    pub t: u32,
+    pub n: u32,
+}
 
 /// Holds the state of the server, configuration, keys, etc.
 pub struct ServerState {
@@ -44,12 +55,4 @@ impl ServerState {
             participants,
         }
     }
-}
-
-/// Uniquelly identifies another server
-pub struct ServerAddress {
-    /// Server IP
-    ip: String,
-    /// Server port
-    port: u16,
 }

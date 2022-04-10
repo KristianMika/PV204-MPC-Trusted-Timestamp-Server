@@ -1,0 +1,37 @@
+name: Default CI
+on: [push]
+
+jobs:
+  Test:
+    runs-on: ubuntu-latest
+    name: Run tests
+    container: rust:latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests in the release mode
+        run: cargo test --all --release
+  # Build-bin:
+  #   runs-on: ubuntu-latest
+  #   name: Static binary build
+  #   needs: [Test]
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Build the binary
+  #       run: sudo docker run --rm -v "$(pwd)":/home/rust/src ekidd/rust-musl-builder cargo build
+  #     - name: Push the binaries
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: server-binary
+  #         path: /target/x86_64-unknown-linux-musl/debug/timestamp_server
+  # Build-docker:
+  #   runs-on: ubuntu-latest
+  #   name: Docker image build
+  #   needs: [Build-bin]
+  #   steps:
+  #     - name: Get the binary
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: server-binary
+  #     - name: Build the Docker image
+  #       run: sudo docker build . --tag diks-tits:latest
+
