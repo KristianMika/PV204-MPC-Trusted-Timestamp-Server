@@ -45,7 +45,7 @@ async fn main() -> std::io::Result<()> {
     let (participant, coefs) = Participant::new(&parameters, server_index);
     let server_address = format!(
         "{ip}:{port}",
-        ip = String::from("127.0.0.1"),
+        ip = String::from("0.0.0.0"),
         port = &config.port.to_string()
     );
     let server_state = Data::new(Mutex::new(ServerState::new(
