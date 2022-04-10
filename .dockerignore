@@ -1,0 +1,8 @@
+# Ignore everything
+**
+
+# Whitelist
+!./target/x86_64-unknown-linux-musl/debug/timestamp_server
+!./target/x86_64-unknown-linux-musl/release/timestamp_server
+!./target/debug/timestamp_server
+!./target/release/timestamp_server
