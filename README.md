@@ -13,7 +13,7 @@ The build uses [rust-musl-builder](https://github.com/emk/rust-musl-builder).
 alias rust-musl-builder='docker run --rm -it -v "$(pwd)":/home/rust/src ekidd/rust-musl-builder'
 rust-musl-builder cargo build # TODO: add --release before the assignment submission
 ```
-*NOTE: In case the new build doesn't correctly remove the tag from the old image, remove all docker big-tits images*
+*NOTE: In case the new build doesn't correctly remove the tag from the old image, remove all docker diks-tits images*
 ```bash
 docker rmi --force diks-tits
 ```
