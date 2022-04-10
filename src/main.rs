@@ -1,7 +1,7 @@
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 use frost_dalek::Parameters;
-use std::sync::Mutex;
+use futures::lock::Mutex;
 use timestamp_server::{Config, ServerState};
 mod services;
 use services::*;

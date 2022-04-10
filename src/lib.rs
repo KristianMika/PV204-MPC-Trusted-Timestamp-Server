@@ -25,8 +25,14 @@ pub fn create_participants(params: &Parameters) -> ParticipantVec {
     }
     participants
 }
+#[derive(Clone)]
+pub enum Event {
+    KeygenPhase1,
+    KeygenPhase2,
+}
 
 pub type ParticipantVec = Vec<(Participant, Coefficients)>;
+pub type EventVec = Vec<Option<Event>>;
 /// Holds the state of the server, configuration, keys, etc.
 pub struct ServerState {
     /// Configuration of the context, namely t-n parameter
@@ -36,17 +42,15 @@ pub struct ServerState {
     /// Other participants
     pub participants: ParticipantVec,
     pub this_server_index: usize,
+    pub confirmations: EventVec,
+    /// TODO: a tmp value, remove once the state mechine is working
+    pub hack_val: u32,
 }
 
 impl ServerState {
     pub fn default() -> ServerState {
         let parameters = Parameters { t: 2, n: 3 };
-        ServerState {
-            parameters,
-            servers: vec![],
-            participants: create_participants(&parameters),
-            this_server_index: 1,
-        }
+        ServerState::new(parameters, vec![], 1)
     }
 
     pub fn new(
@@ -59,6 +63,8 @@ impl ServerState {
             servers,
             participants: create_participants(&parameters),
             this_server_index,
+            confirmations: vec![None; parameters.n as usize],
+            hack_val: 0,
         }
     }
 
