@@ -12,6 +12,7 @@ mod utils;
 use utils::*;
 
 const CONFIG_PATH: &str = "config/config.toml";
+const BIND_IP: &str = "0.0.0.0";
 
 // TODO: consider anyhow
 // TODO: use an automata and track states + check transitions
@@ -43,11 +44,7 @@ async fn main() -> std::io::Result<()> {
         n: config.n,
     };
     let (participant, coefs) = Participant::new(&parameters, server_index);
-    let server_address = format!(
-        "{ip}:{port}",
-        ip = String::from("0.0.0.0"),
-        port = &config.port.to_string()
-    );
+    let server_address = format!("{ip}:{port}", ip = BIND_IP, port = &config.port.to_string());
     let server_state = Data::new(Mutex::new(ServerState::new(
         participant,
         coefs,
@@ -67,7 +64,6 @@ async fn main() -> std::io::Result<()> {
             .service(post_keygen_p2::post_keygen_p2)
             .service(post_partial_signature::post_partial_signature)
             .service(post_reset::post_reset)
-            .service(post_setup::post_setup)
     })
     .bind(server_address)?
     .run()
