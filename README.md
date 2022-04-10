@@ -1,4 +1,4 @@
-# DIKS TITS 
+# DiKS TiTS 
 
 **Di**stributed **K**ey **S**igning **Ti**mes**t**amp **S**erver
 
