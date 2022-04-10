@@ -42,11 +42,11 @@ docker-compose up
 docker-compose rm --stop -v
 ```
 
-The individual servers 1 - 3 are accessible on localhost:{8081-8083}.
+The individual servers 1 - 3 are accessible on localhost:{8080-8082}.
 
 ### Usage
 
 #### Trigger Keygeneration
 ```bash
-wget --method POST -O- 127.0.0.1:8081/keygen | /dev/null
+wget --method POST -O- 127.0.0.1:8080/keygen | /dev/null
 ```

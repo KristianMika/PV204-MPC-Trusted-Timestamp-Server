@@ -1,8 +1,14 @@
+use actix_web::error::ParseError::Status;
+use actix_web::web::Data;
+use actix_web::HttpResponse;
+use actix_web::Responder;
 use actix_web::{post, web};
+use futures::lock::Mutex;
 use hex;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::time::SystemTime;
+use timestamp_server::{ServerState, State};
 
 /// The struct sent by the client in the body as JSON
 #[derive(Deserialize)]
@@ -33,9 +39,15 @@ pub struct TimeStampResp {
 /// - Anyone
 #[post("/timestamp")]
 pub async fn post_create_timestamp(
+    state: Data<Mutex<ServerState>>,
     request: web::Json<TimestampStruct>,
-) -> web::Json<TimeStampResp> {
+) -> impl Responder {
     // TODO: check the state
+
+    if state.lock().await.state != State::Timestamping {
+        // return HttpResponse::Forbidden();
+        // TODO: return an error
+    }
 
     // TODO: compute the hash(hash(data) || timestamp)
     let now = SystemTime::now();

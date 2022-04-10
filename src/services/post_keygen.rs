@@ -17,27 +17,14 @@ use timestamp_server::ServerState;
 pub async fn post_keygen(state: Data<Mutex<ServerState>>) -> impl Responder {
     // TODO: check the state
 
-    let params = state.lock().await.parameters.clone();
-    // TODO: trigger key generation phase 1
-
+    // trigger the pubkey exchange
     // TODO: check response
-    let res = send_this_participant(state.clone()).await;
-    let unlocked_state = state.lock().await;
-    let (this_participant, this_part_coefs) =
-        &unlocked_state.participants[unlocked_state.this_server_index - 1];
-    // TODO: store to the state
-    let this_key_state = DistributedKeyGeneration::<_>::new(
-        &params,
-        &this_participant.index,
-        &this_part_coefs,
-        &mut unlocked_state.get_other_participants(),
-    )
-    .unwrap();
+    log::info!("received /keygen");
+    actix_rt::spawn(async {
+        log::info!("async send_this_participant started");
+        send_this_participant(state).await.unwrap();
+        log::info!("async send_this_participant finished");
+    });
 
-    let to_share = this_key_state.their_secret_shares().unwrap().clone();
-    // TODO: check how we can serialize it
-    log::info!("Keygen phase 1 done");
-    // TODO: trigger key generation phase 2
     HttpResponse::Ok()
-    // TODO: return pubkey
 }
