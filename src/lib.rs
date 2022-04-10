@@ -13,46 +13,67 @@ pub struct Config {
     pub n: u32,
 }
 
+/// Creates a vector of `n` participants
+///
+/// # Arguments
+///
+/// * `params` - threshold parameters
+pub fn create_participants(params: &Parameters) -> ParticipantVec {
+    let mut participants = vec![];
+    for server_index in 1..=params.n {
+        participants.push(Participant::new(&params, server_index));
+    }
+    participants
+}
+
+pub type ParticipantVec = Vec<(Participant, Coefficients)>;
 /// Holds the state of the server, configuration, keys, etc.
 pub struct ServerState {
-    /// A unique index of the server with respect to the context
-    pub server_participant: Participant,
-    pub server_coef: Coefficients,
     /// Configuration of the context, namely t-n parameter
     pub parameters: Parameters,
-    /// Other servers in the current context
+    /// Addresses of other servers in the current context
     pub servers: Vec<String>,
     /// Other participants
-    pub participants: Vec<(Participant, Coefficients)>,
+    pub participants: ParticipantVec,
+    pub this_server_index: usize,
 }
 
 impl ServerState {
     pub fn default() -> ServerState {
         let parameters = Parameters { t: 2, n: 3 };
-        let (server_participant, server_coef) = Participant::new(&parameters, 0);
         ServerState {
-            server_participant,
-            server_coef,
             parameters,
             servers: vec![],
-            participants: vec![],
+            participants: create_participants(&parameters),
+            this_server_index: 1,
         }
     }
 
     pub fn new(
-        server_participant: Participant,
-        server_coef: Coefficients,
-
         parameters: Parameters,
         servers: Vec<String>,
-        participants: Vec<(Participant, Coefficients)>,
+        this_server_index: usize,
     ) -> ServerState {
         ServerState {
-            server_participant,
-            server_coef,
             parameters,
             servers,
-            participants,
+            participants: create_participants(&parameters),
+            this_server_index,
         }
+    }
+
+    /// Returns a vector of other participant structs
+    /// Used in the first keygen phase
+    pub fn get_other_participants(&self) -> Vec<Participant> {
+        self.participants
+            .iter()
+            .enumerate()
+            .filter(|&(i, _)| i != self.this_server_index)
+            .map(
+                |(_, (part, _)): (usize, &(Participant, Coefficients))| -> Participant {
+                    part.clone()
+                },
+            )
+            .collect()
     }
 }

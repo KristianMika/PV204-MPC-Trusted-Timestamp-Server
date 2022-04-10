@@ -1,7 +1,6 @@
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 use frost_dalek::Parameters;
-use frost_dalek::Participant;
 use std::sync::Mutex;
 use timestamp_server::{Config, ServerState};
 mod services;
@@ -10,9 +9,11 @@ use std::env;
 
 mod utils;
 use utils::*;
+pub mod keygen;
 
 const CONFIG_PATH: &str = "config/config.toml";
 const BIND_IP: &str = "0.0.0.0";
+const PROTOCOL: &str = "http";
 
 // TODO: consider anyhow
 // TODO: use an automata and track states + check transitions
@@ -23,7 +24,7 @@ async fn main() -> std::io::Result<()> {
         Ok(val) => val,
         Err(_) => panic!("SERVER_INDEX is not set."),
     };
-    let server_index: u32 = match server_index.parse() {
+    let server_index: usize = match server_index.parse() {
         Ok(val) => val,
         Err(_) => panic!("Invalid SERVER_INDEX value: {}", server_index),
     };
@@ -43,14 +44,12 @@ async fn main() -> std::io::Result<()> {
         t: config.t,
         n: config.n,
     };
-    let (participant, coefs) = Participant::new(&parameters, server_index);
+
     let server_address = format!("{ip}:{port}", ip = BIND_IP, port = &config.port.to_string());
     let server_state = Data::new(Mutex::new(ServerState::new(
-        participant,
-        coefs,
         parameters,
         config.servers,
-        vec![],
+        server_index,
     )));
 
     log::info!("Starting the server at {}.", server_address);
