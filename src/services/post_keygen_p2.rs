@@ -26,11 +26,15 @@ pub async fn post_keygen_p2(
     }
 
     if state.lock().await.group_key.is_some() {
+        // TODO: check I've confirmed all publey
+        state.lock().await.state = State::Timestamping;
+
         log::info!("Sharing the group key");
         actix_rt::spawn(async {
             share_groupkey(state).await;
         });
     }
+
     // TODO: send the shares to other participants
 
     // TODO: update the state

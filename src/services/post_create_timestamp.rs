@@ -1,6 +1,4 @@
-use actix_web::error::ParseError::Status;
 use actix_web::web::Data;
-use actix_web::HttpResponse;
 use actix_web::Responder;
 use actix_web::{post, web};
 use futures::lock::Mutex;
@@ -11,7 +9,7 @@ use std::time::SystemTime;
 use timestamp_server::{ServerState, State};
 
 /// The struct sent by the client in the body as JSON
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[allow(non_snake_case)]
 pub struct TimestampStruct {
     /// The algorithm to be used for hashing
@@ -49,6 +47,7 @@ pub async fn post_create_timestamp(
         // TODO: return an error
     }
 
+    log::info!("Received for timestamping: {:?}", request);
     // TODO: compute the hash(hash(data) || timestamp)
     let now = SystemTime::now();
 
