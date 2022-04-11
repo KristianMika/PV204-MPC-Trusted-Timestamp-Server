@@ -6,7 +6,7 @@
 	},
 	"item": [
 		{
-			"name": "KeyGen",
+			"name": "Trigger keygen",
 			"request": {
 				"method": "POST",
 				"header": [],
@@ -63,6 +63,43 @@
 					"port": "8080",
 					"path": [
 						"pubkey"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get commitment",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/commitment/0",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"commitment",
+						"0"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get groupkey",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/groupkey",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"groupkey"
 					]
 				}
 			},
