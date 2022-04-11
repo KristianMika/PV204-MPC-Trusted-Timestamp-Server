@@ -767,7 +767,7 @@ impl From<&SecretKey> for IndividualPublicKey {
 }
 
 /// A public key, used to verify a signature made by a threshold of a group of participants.
-#[derive(Clone, Copy, Debug, Eq)]
+#[derive(Clone, Copy, Debug, Eq, Serialize, Deserialize)]
 pub struct GroupKey(pub(crate) RistrettoPoint);
 
 impl PartialEq for GroupKey {
