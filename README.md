@@ -46,6 +46,8 @@ The individual servers 1 - 3 are accessible on localhost:{8080-8082}.
 
 ### Usage
 
+It is recommended to use [Postman](https://www.postman.com/) for request submission. A request collection that can be imported into the Postman is located [here](Diks-tits-requests.postman_collection.json).
+
 #### Trigger Keygeneration
 ```bash
 wget --method POST -O- 127.0.0.1:8080/keygen | /dev/null
