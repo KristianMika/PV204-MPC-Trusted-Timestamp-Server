@@ -166,11 +166,14 @@ pub async fn get_commitment(
 // TODO: use caching, try to cache address in the state, maybe pre-cache them
 pub async fn get_public_key(server_address: &str) -> IndividualPublicKey {
     // TODO: return a result!!!!!
+
+    log::info!("Requesting a pubkey from {}", server_address);
     let res = reqwest::get(build_address(PROTOCOL, server_address, "get_pubkey"))
         .await
         .unwrap()
         .json::<IndividualPublicKey>()
         .await;
+    log::info!("I got {:?}", res.as_ref().unwrap());
     res.unwrap()
 }
 

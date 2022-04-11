@@ -66,6 +66,7 @@ async fn main() -> std::io::Result<()> {
             .service(post_reset::post_reset)
             .service(post_init::post_init)
             .service(get_commitment::get_commitment)
+            .service(get_groupkey::get_groupkey)
     })
     .bind(server_address)?
     .run()

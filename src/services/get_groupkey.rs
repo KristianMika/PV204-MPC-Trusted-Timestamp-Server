@@ -13,7 +13,6 @@ use timestamp_server::{ServerState, State};
 /// - Anyone
 #[get("/groupkey")]
 pub async fn get_groupkey(state: Data<Mutex<ServerState>>) -> impl Responder {
-
     if state.lock().await.state != State::Timestamping {
         // TODO: return an error
     }
@@ -21,5 +20,5 @@ pub async fn get_groupkey(state: Data<Mutex<ServerState>>) -> impl Responder {
     // TODO: consider returning it in hex
     HttpResponse::Ok()
         .content_type(ContentType::json())
-        .json(state.lock().await.group_key().unwrap())
+        .json(state.lock().await.group_key.unwrap())
 }

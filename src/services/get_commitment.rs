@@ -33,6 +33,8 @@ pub async fn get_commitment(
             this_server_index as u32,
             commitments_to_generate,
         );
+        state.lock().await.public_commitment_shares = Some(public_shares);
+        state.lock().await.secret_commitment_shares = Some(secret_shares);
     }
 
     let commitment_index: usize = path.into_inner();
