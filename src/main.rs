@@ -7,6 +7,14 @@ mod services;
 use services::*;
 use std::env;
 
+use rustls::server::{ServerConfig};
+use rustls::server::AllowAnyAnonymousOrAuthenticatedClient;
+use rustls_pemfile::{certs, read_all, pkcs8_private_keys};
+
+use std::io::BufReader;
+use std::fs::File;
+
+
 mod utils;
 use utils::*;
 pub mod keygen;
@@ -52,6 +60,30 @@ async fn main() -> std::io::Result<()> {
         server_index,
     )));
 
+
+    // Load key files
+    let cert_file = &mut BufReader::new(
+    File::open("certificates/fullchain.pem").unwrap());
+    let key_file = &mut BufReader::new(
+    File::open("certificates/privkey.pem").unwrap());
+
+    // Parse the certificate and set it in the configuration
+    // may show error of self declared cerificate or something like that
+    let cert_chain = read_all(cert_file).unwrap();
+    //this is in case of der fromat which should probably be used
+    let der_certs = certs(cert_file).unwrap();
+    let mut keys = pkcs8_private_keys(key_file).unwrap();
+
+    // empty for now
+    let mut roots = rustls::RootCertStore::empty();
+
+    let mut config = ServerConfig::builder()
+                    .with_safe_defaults()
+                    //how the fuck do I create RootCertStore
+                    .with_client_cert_verifier(AllowAnyAnonymousOrAuthenticatedClient::new(roots))
+                    .with_single_cert(der_certs, key).unwrap();
+
+
     log::info!("Starting the server at {}.", server_address);
     HttpServer::new(move || {
         App::new()
@@ -64,7 +96,7 @@ async fn main() -> std::io::Result<()> {
             .service(post_partial_signature::post_partial_signature)
             .service(post_reset::post_reset)
     })
-    .bind(server_address)?
+    .bind_rustls(server_address, config)?
     .run()
     .await
 }
