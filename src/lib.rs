@@ -1,6 +1,9 @@
 use frost_dalek::keygen::Coefficients;
 use frost_dalek::keygen::RoundTwo;
 use frost_dalek::keygen::SecretShare;
+use frost_dalek::precomputation::PublicCommitmentShareList;
+use frost_dalek::precomputation::SecretCommitmentShareList;
+use frost_dalek::signature::Signer;
 use frost_dalek::DistributedKeyGeneration;
 use frost_dalek::{GroupKey, IndividualSecretKey, Parameters, Participant};
 use serde::{Deserialize, Serialize};
@@ -56,12 +59,21 @@ pub struct ServerState {
     pub server_state: Option<DistributedKeyGeneration<RoundTwo>>,
     pub group_key: Option<GroupKey>,
     pub secret_key: Option<IndividualSecretKey>,
+    pub public_commitment_shares: Option<PublicCommitmentShareList>,
+    pub secret_commitment_shares: Option<SecretCommitmentShareList>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SecretShareMessage {
     pub from: usize,
     pub val: SecretShare,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PartialSignatureRequest {
+    pub message_hash: Vec<u8>,
+    pub signers: Vec<Signer>,
+    pub commitment_index: usize,
 }
 
 impl ServerState {
@@ -93,6 +105,8 @@ impl ServerState {
             server_state: None,
             group_key: None,
             secret_key: None,
+            public_commitment_shares: None,
+            secret_commitment_shares: None,
         }
     }
 

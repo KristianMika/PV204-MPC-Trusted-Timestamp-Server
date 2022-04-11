@@ -1,3 +1,4 @@
+pub mod get_commitment;
 pub mod get_pubkey;
 pub mod post_create_timestamp;
 pub mod post_init;

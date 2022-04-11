@@ -65,6 +65,7 @@ async fn main() -> std::io::Result<()> {
             .service(post_partial_signature::post_partial_signature)
             .service(post_reset::post_reset)
             .service(post_init::post_init)
+            .service(get_commitment::get_commitment)
     })
     .bind(server_address)?
     .run()
