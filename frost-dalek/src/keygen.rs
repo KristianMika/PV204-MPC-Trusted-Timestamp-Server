@@ -739,7 +739,7 @@ impl IndividualPublicKey {
 }
 
 /// A secret key, used by one participant in a threshold signature scheme, to sign a message.
-#[derive(Debug, Zeroize)]
+#[derive(Debug, Zeroize, Clone)]
 #[zeroize(drop)]
 pub struct SecretKey {
     /// The participant index to which this key belongs.
