@@ -1,7 +1,8 @@
 use frost_dalek::keygen::Coefficients;
+use frost_dalek::keygen::RoundTwo;
 use frost_dalek::keygen::SecretShare;
-use frost_dalek::Parameters;
-use frost_dalek::Participant;
+use frost_dalek::DistributedKeyGeneration;
+use frost_dalek::{GroupKey, IndividualSecretKey, Parameters, Participant};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
@@ -52,6 +53,9 @@ pub struct ServerState {
     pub round_1_sent: bool,
     pub round_one_struct: RoundOneStruct,
     pub secretShares: Vec<Option<SecretShare>>,
+    pub server_state: Option<DistributedKeyGeneration<RoundTwo>>,
+    pub group_key: Option<GroupKey>,
+    pub secret_key: Option<IndividualSecretKey>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -86,6 +90,9 @@ impl ServerState {
             round_1_sent: false,
             round_one_struct: None,
             secretShares: vec![None; parameters.n as usize],
+            server_state: None,
+            group_key: None,
+            secret_key: None,
         }
     }
 
@@ -132,5 +139,13 @@ impl ServerState {
                 true,
                 |agg, (_, val): (usize, &Option<SecretShare>)| -> bool { agg && val.is_some() },
             )
+    }
+
+    pub fn get_secret_shares(&self) -> Vec<SecretShare> {
+        self.secretShares
+            .clone()
+            .into_iter()
+            .filter_map(|e| e)
+            .collect()
     }
 }

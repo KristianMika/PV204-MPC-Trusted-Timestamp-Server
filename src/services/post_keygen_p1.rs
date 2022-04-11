@@ -1,3 +1,4 @@
+use crate::keygen::to_phase_2;
 use actix_web::web::Data;
 use actix_web::HttpResponse;
 use actix_web::Responder;
@@ -23,6 +24,9 @@ pub async fn post_keygen_p1(
     if state.lock().await.have_all_shares() {
         state.lock().await.state = State::Phase2;
         log::info!("Into phase 2!!!!!!!!");
+        actix_rt::spawn(async {
+            to_phase_2(state).await;
+        });
     }
 
     // TODO: update the state
