@@ -1,8 +1,6 @@
 use crate::build_address;
 use crate::PROTOCOL;
-use actix_web::http::header::ContentType;
 use actix_web::web::Data;
-use actix_web::HttpResponse;
 use actix_web::Responder;
 use actix_web::{post, web};
 use chrono::{DateTime, Utc};
@@ -204,7 +202,6 @@ pub async fn get_public_key(server_address: &str) -> IndividualPublicKey {
         .unwrap()
         .json::<IndividualPublicKey>()
         .await;
-    log::info!("I got {:?}", res.as_ref().unwrap());
     res.unwrap()
 }
 
