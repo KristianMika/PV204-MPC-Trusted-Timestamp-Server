@@ -67,16 +67,16 @@ wget --method POST -O- 127.0.0.1:8080/keygen | /dev/null
 
 - **POST /keygen** 
   - Triggers key generation
-  - Submitted by admin, whose certificate is stored on every severy
+  - Submitted by admin, whose pubkey is certified, authority cert stored on every server
 - **POST /init**
   - Servers receive the commitments and zero-knowledge proof here.
-  - Used only by servers, request authentication using stored certificates.
-- **POST keygen_phase1**
+  - Used only by servers, request authentication using TLS and stored certificates.
+- **POST /keygen_phase1**
   - Used for receptino of secret shares from group 1.
-  - Used only by servers, request authentication using stored certificates.
-- **POST keygen_phase2**
+  - Used only by servers, request authentication using TLS and stored certificates.
+- **POST /keygen_phase2**
   - Servers receive the groupkey, which is compared to the ones they computed.
-  - Used only by servers, request authentication using stored certificates.
+  - Used only by servers, request authentication using TLS and stored certificates.
 
 ### Getters
 - **GET /commitment**
@@ -92,8 +92,8 @@ wget --method POST -O- 127.0.0.1:8080/keygen | /dev/null
 - **POST /partial_signature**
   - Used by servers requesting a partial signature
 
-## Current Implementation State (TODO)
-- For commitment index synchronization reasons, only one server can be used for requesting the /timestamp endpoin. (the index is not being synchronized right now)
+## Current Implementation State
+- For commitment index synchronization reasons, only one server can be used for requesting the /timestamp endpoint. (the index is not being synchronized right now)
 - We are using a fixed subset of signers for signing
 - The code quality is super bad. In fact, it could be used the next year for PA193 as a buggy code assignment (28 unwrap usages right now, 54 TODO occurences).
 - Missing authentication - [TLS setup](https://actix.rs/docs/http2/).
