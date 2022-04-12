@@ -2,6 +2,7 @@ use clap::{arg, Command};
 use chrono::offset::Utc;
 use chrono::DateTime;
 use std::time::SystemTime;
+// use std::process;
 
 #[tokio::main]
 async fn main() -> Result<(), reqwest::Error> {
@@ -14,17 +15,21 @@ async fn main() -> Result<(), reqwest::Error> {
         .subcommand(
             Command::new("config")
                     .about("Configuration mode. Authentication required (for some commands)")
-                    .arg(arg!(--XXX).help("Triggers the key generation phase. Requires the -p passphrase argument and Config mode."))
-                    .arg(arg!(-x --passphrase <passphrase>).help("Passphrase to trigger keygen"))
+                    .arg(arg!(-i --keygen).help("Triggers the key generation phase. Requires the -p passphrase argument and Config mode."))
+                    .arg(arg!(-p --passphrase <passphrase>).help("Passphrase to trigger keygen.
+                                            JUST A DEMO TO SHOW THAT THESE OPERATIONS ARE PERFORMED ONLY BY A TRUSTED ADMIN.
+                                            These api's and corresponding endpoints itself can be assumed to be inaccessible to attacker,
+                                            as they are only to be used during setup or teardown of the server."))
+                    .arg(arg!(-r --reset).help("Reset the server"))
         )
         .subcommand(
             Command::new("display")
                     .about("Displays the relevant information like socket address, Context, group key, parameters, etc.")
-                    .arg(arg!(-a --sockaddrs).help("Displays the various socket addresses of the servers."))
-                    .arg(arg!(-c --context).help("Displays the Context string"))
-                    .arg(arg!(-g --groupkey).help("Displays the public group key"))
-                    .arg(arg!(-k --serverkey).help("Displays the server's public key. Use with -s flag to supply the socket address"))
-                    .arg(arg!(-s --servaddr <addr>).help("The server address to send the request to").required(false))
+                    // .arg(arg!(-a --sockaddrs).help("Displays the various socket addresses of the servers."))
+                    .arg(arg!(-c --context).help("Displays the Context string"))/* */
+                    .arg(arg!(-g --groupkey).help("Displays the public group key"))/* */
+                    .arg(arg!(-k --serverkey).help("Displays the server's public key. Use with -s flag to supply the socket address"))/*text -> json */
+                    .arg(arg!(-s --servaddr <addr>).help("The server address to send the request to").required(false))/* */
                     .arg(arg!(-p --params).help("Displays the number of signers and the minimum threshold required to sign."))/* */
                     .arg(arg!(-t --timeout).help("Displays the current timestamp in the format used for signing."))/* */
         )
@@ -32,9 +37,9 @@ async fn main() -> Result<(), reqwest::Error> {
             Command::new("input")
                     .about("Input operations like signing, validation, etc.")
                     .arg(arg!(-m --msg <msg>).help("Input the message that needs to be hashed. Input will be parsed as a string."))
-                    .arg(arg!(-s --server <server>).help("Enter the socketaddr of the server that you want to visit."))
-                    .arg(arg!(-v --verify <signfile>).help("Enter the json file for the signature. Should have 2 more arguments: -t timestamp, -m message"))
-                    .arg(arg!(-t --timein <timein>).help("Enter the time stamp for signature verification."))
+                    .arg(arg!(-s --server <server>).help("Enter the socketaddr of the server that you want to visit.").required(false))
+                    .arg(arg!(-v --verify <signfile>).help("Enter the json file for the signature. Should have 2 more arguments: -t timestamp, -m message").required(false))
+                    .arg(arg!(-t --timein <timein>).help("Enter the time stamp for signature verification.").required(false))
         )
         .get_matches();
 
@@ -56,6 +61,9 @@ async fn main() -> Result<(), reqwest::Error> {
                 else if sub_matches.is_present("params"){
                     println!("Signers: 3\nThreshold: 2");
                 }
+                else if sub_matches.is_present("context"){
+                    println!("diks-tits");
+                }
                 else if sub_matches.is_present("serverkey") {
                     if sub_matches.is_present("servaddr") {
                         // println!("serverkey flag found");
@@ -69,8 +77,56 @@ async fn main() -> Result<(), reqwest::Error> {
 
                 Ok(())
             },
+
+            Some(("config", sub_matches)) =>{
+                
+                if sub_matches.is_present("passphrase"){
+                    if sub_matches.value_of("passphrase").unwrap() == "security100" {
+                        println!("You are an admin. You can't be an attacker.");
+                        
+                        if sub_matches.is_present("keygen") {
+                            let client = reqwest::Client::new();
+                            let res = client.post("http://127.0.0.1:8080/keygen")
+                                .body("")
+                                .send()
+                                .await?;
+                            println!("{:?}",res);
+                        }
+
+                        if sub_matches.is_present("reset") {
+                            let client = reqwest::Client::new();
+                            let res = client.post("http://127.0.0.1:8080/reset")
+                                .body("")
+                                .send()
+                                .await?;
+                            println!("{:?}",res);
+                        }
+                    } else {
+                        println!(" Password is: security100. Try again.");
+                    }
+                } else {
+                    println!("Send -p as security100. Try again.");
+                    return Ok(());
+                };
+                Ok(())
+                
+            }
+
+            Some(("input", sub_matches)) => {
+
+                if sub_matches.is_present("msg") {
+
+                } else if sub_matches.is_present("verify"){
+
+                }else {
+                    println!("Invalid input in input mode.");
+                }
+                Ok(())
+                
+            }
+
             _ => {
-                println!("TODO");
+                println!("invalid mode of operation");
                 Ok(())
             }
         }
