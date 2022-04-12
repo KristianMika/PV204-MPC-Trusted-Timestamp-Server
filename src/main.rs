@@ -2,6 +2,7 @@ use clap::{arg, Command};
 use chrono::offset::Utc;
 use chrono::DateTime;
 use std::time::SystemTime;
+use serde::{Serialize, Deserialize};
 // use std::process;
 
 #[tokio::main]
@@ -37,8 +38,9 @@ async fn main() -> Result<(), reqwest::Error> {
             Command::new("input")
                     .about("Input operations like signing, validation, etc.")
                     .arg(arg!(-m --msg <msg>).help("Input the message that needs to be hashed. Input will be parsed as a string."))
-                    .arg(arg!(-s --server <server>).help("Enter the socketaddr of the server that you want to visit.").required(false))
-                    .arg(arg!(-v --verify <signfile>).help("Enter the json file for the signature. Should have 2 more arguments: -t timestamp, -m message").required(false))
+                    .arg(arg!(-a --server <server>).help("Enter the socketaddr of the server that you want to visit.").required(false))
+                    .arg(arg!(-v --verify).help("Verify a signature. Should have 2 more arguments: -t timestamp, -m message").required(false))
+                    .arg(arg!(-s --sign).help("Sign the msg. Should have 2 more arguments: -t timestamp, -m message").required(false))
                     .arg(arg!(-t --timein <timein>).help("Enter the time stamp for signature verification.").required(false))
         )
         .get_matches();
@@ -114,7 +116,21 @@ async fn main() -> Result<(), reqwest::Error> {
 
             Some(("input", sub_matches)) => {
 
-                if sub_matches.is_present("msg") {
+                if sub_matches.is_present("sign") {
+                    #[derive(Serialize)]
+                    struct TimestampStruct {
+                        hashAlgorithm: String,
+                        hashedMessage: String,
+                    }
+
+                    let body = TimestampStruct{ hashAlgorithm: "SHA2".to_string(), hashedMessage: sub_matches.value_of("msg").unwrap().to_string() };
+                    let kgb = serde_json::to_string(&body).unwrap();
+                    let client = reqwest::Client::new();
+                    let res = client.post("http://127.0.0.1:8080/timestamp")
+                        .json(&kgb)
+                        .send()
+                        .await?;
+                    println!("{:?}",res);
 
                 } else if sub_matches.is_present("verify"){
 
