@@ -35,6 +35,8 @@ pub async fn post_partial_signature(
         Ok(v) => v,
         Err(e) => panic!("Kristian is corrupt!!!\n{}", e),
     };
+
+    unlocked_state.commitment_index = request.commitment_index + 1;
     drop(unlocked_state);
 
     web::Json(partial_sig)

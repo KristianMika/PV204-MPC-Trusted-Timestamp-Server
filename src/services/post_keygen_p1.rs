@@ -18,7 +18,6 @@ pub async fn post_keygen_p1(
 
     // TODO: check the key has not been combined already
     let share: SecretShareMessage = request.0;
-    log::info!("received: {:?}", share);
     state.lock().await.secretShares[share.from as usize] = Some(share.val);
 
     if state.lock().await.have_all_shares() {

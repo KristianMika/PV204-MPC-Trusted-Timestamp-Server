@@ -22,7 +22,6 @@ pub async fn get_pubkey(state: Data<Mutex<ServerState>>) -> impl Responder {
     }
 
     let pubkey: IndividualPublicKey = state.lock().await.secret_key.as_ref().unwrap().to_public();
-    log::info!("responding with a pubkey {:?}", pubkey.clone());
 
     web::Json(pubkey)
 }

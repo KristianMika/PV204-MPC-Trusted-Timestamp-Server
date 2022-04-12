@@ -40,7 +40,7 @@ pub async fn get_commitment(
     // }
 
     let commitment_index: usize = path.into_inner();
-
+    log::info!("sending commitment index {}", commitment_index);
     if commitment_index >= commitments_to_generate as usize {
         // TODO: return error
     }

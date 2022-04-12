@@ -61,6 +61,7 @@ pub struct ServerState {
     pub secret_key: Option<IndividualSecretKey>,
     pub public_commitment_shares: Option<PublicCommitmentShareList>,
     pub secret_commitment_shares: Option<SecretCommitmentShareList>,
+    pub commitment_index: usize,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -107,6 +108,7 @@ impl ServerState {
             secret_key: None,
             public_commitment_shares: None,
             secret_commitment_shares: None,
+            commitment_index: 0,
         }
     }
 
@@ -161,5 +163,11 @@ impl ServerState {
             .into_iter()
             .filter_map(|e| e)
             .collect()
+    }
+
+    pub fn get_and_increment_comiitment_index(&mut self) -> usize {
+        let val = self.commitment_index;
+        self.commitment_index += 1;
+        val
     }
 }

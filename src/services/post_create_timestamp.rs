@@ -40,6 +40,7 @@ pub struct TimeStampResp {
     status: String, // for now, later PKIStatusInfo
     /// Can be casted to [u8;64], see partial_sig or utils, function to_array
     timeStampToken: Vec<u8>, // TODO: read the RFC 3161
+    final_hash: Vec<u8>,
 }
 
 /// Requests a signed timestamp of the provided data using the specified hash algorithm
@@ -55,10 +56,10 @@ pub async fn post_create_timestamp(
     request: web::Json<TimestampStruct>,
 ) -> impl Responder {
     // TODO: check the state
-    // -----------------------------------------------
-    // BIG TODO:: commitment index
-    // -----------------------------------------------
 
+    let commitment_index = state.lock().await.get_and_increment_comiitment_index();
+
+    log::info!("Using com index {}", commitment_index);
     if state.lock().await.state != State::Timestamping {
         // return HttpResponse::Forbidden();
         // TODO: return an error
@@ -73,6 +74,7 @@ pub async fn post_create_timestamp(
             let err_response = TimeStampResp {
                 status: String::from("fail"),
                 timeStampToken: vec![],
+                final_hash: vec![],
             };
             return web::Json(err_response);
             // return web::Json(err_response);
@@ -98,9 +100,6 @@ pub async fn post_create_timestamp(
         SignatureAggregator::new(parameters, group_key, &CONTEXT[..], &fin_hash[..]);
 
     let signers_to_sign = get_random_signers(&state.lock().await.parameters);
-
-    // TODO: store this into the state + increment!!!
-    let commitment_index = 0;
 
     let this_server_index = state.lock().await.this_server_index.clone();
     for signer_index in signers_to_sign.clone() {
@@ -155,6 +154,7 @@ pub async fn post_create_timestamp(
     let response: TimeStampResp = TimeStampResp {
         status: String::from("Ok?"),
         timeStampToken: threshold_sign.to_bytes().to_vec(),
+        final_hash: message_hash.to_vec(),
     };
 
     web::Json(response)

@@ -34,14 +34,16 @@ pub async fn post_keygen_p2(
 
         log::info!("Sharing the group key");
 
-        let this_server_index = state.lock().await.this_server_index.clone();
-        let (public_shares, secret_shares) = generate_commitment_share_lists(
-            &mut OsRng,
-            this_server_index as u32,
-            commitments_to_generate as usize,
-        );
-        state.lock().await.public_commitment_shares = Some(public_shares);
-        state.lock().await.secret_commitment_shares = Some(secret_shares);
+        if !state.lock().await.public_commitment_shares.is_some() {
+            let this_server_index = state.lock().await.this_server_index.clone();
+            let (public_shares, secret_shares) = generate_commitment_share_lists(
+                &mut OsRng,
+                this_server_index as u32,
+                commitments_to_generate as usize,
+            );
+            state.lock().await.public_commitment_shares = Some(public_shares);
+            state.lock().await.secret_commitment_shares = Some(secret_shares);
+        }
 
         actix_rt::spawn(async {
             share_groupkey(state).await;

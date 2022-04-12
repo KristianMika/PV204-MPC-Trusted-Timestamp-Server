@@ -127,6 +127,7 @@ pub async fn share_phase1(state: Data<Mutex<ServerState>>) -> Result<(), ()> {
                     if val.status() == 200 {
                         break;
                     }
+                    // TODO: better synchronization
                     use std::{thread, time};
 
                     let ten_millis = time::Duration::from_millis(100);
@@ -198,21 +199,32 @@ pub async fn share_groupkey(state: Data<Mutex<ServerState>>) -> Result<(), ()> {
 
         let server_address = state.lock().await.servers[server_index].clone();
         log::info!("Sending the groupkey to: {}", &server_address);
-        let client = reqwest::Client::new();
-        let res = client
-            .post(build_address(PROTOCOL, &server_address, "keygen_phase2"))
-            .json(&group_key)
-            .send()
-            .await;
-        match res {
-            Ok(val) => {
-                log::info!("Received response: {}", val.status());
-            }
-            Err(err) => {
-                log::error!("An error response occured: {}", err.to_string());
-                state.lock().await.confirmations[server_index] = Some(Event::KeygenPhase1);
-            }
-        };
+        let attemps = 5;
+        for attempt in 1..=attemps {
+            let client = reqwest::Client::new();
+            let res = client
+                .post(build_address(PROTOCOL, &server_address, "keygen_phase2"))
+                .json(&group_key)
+                .send()
+                .await;
+            match res {
+                Ok(val) => {
+                    if val.status() == 200 {
+                        break;
+                    }
+                    // TODO: better synchronization
+                    use std::{thread, time};
+
+                    let ten_millis = time::Duration::from_millis(100);
+
+                    thread::sleep(ten_millis);
+                }
+                Err(err) => {
+                    log::error!("An error response occured: {}", err.to_string());
+                    state.lock().await.confirmations[server_index] = Some(Event::KeygenPhase1);
+                }
+            };
+        }
     }
     Ok(())
 }
