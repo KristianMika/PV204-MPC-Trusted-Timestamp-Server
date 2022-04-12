@@ -43,7 +43,7 @@ pub use crate::keygen::SecretKey;
 //     signer's long-term secret key; it must be prevented at all costs.
 
 /// An individual signer in the threshold signature scheme.
-#[derive(Clone, Copy, Debug, Eq)]
+#[derive(Clone, Copy, Debug, Eq, Serialize, Deserialize)]
 pub struct Signer {
     /// The participant index of this signer.
     pub participant_index: u32,

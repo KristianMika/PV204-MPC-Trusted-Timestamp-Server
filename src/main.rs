@@ -31,14 +31,15 @@ async fn main() -> std::io::Result<()> {
     log::info!("Starting server with index {}.", server_index);
 
     let config: Config = match read_config(CONFIG_PATH) {
-        Ok(val) => val,
+        Ok(val) => {
+            log::info!("Successfully loaded the config file.");
+            val
+        }
         Err(_) => panic!(
             "Could not read/parse the config file at path {}.",
             CONFIG_PATH
         ),
     };
-
-    log::info!("Successfully loaded the config file.");
 
     let parameters = Parameters {
         t: config.t,
@@ -63,6 +64,9 @@ async fn main() -> std::io::Result<()> {
             .service(post_keygen_p2::post_keygen_p2)
             .service(post_partial_signature::post_partial_signature)
             .service(post_reset::post_reset)
+            .service(post_init::post_init)
+            .service(get_commitment::get_commitment)
+            .service(get_groupkey::get_groupkey)
     })
     .bind(server_address)?
     .run()

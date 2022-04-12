@@ -1,7 +1,12 @@
 use frost_dalek::keygen::Coefficients;
-use frost_dalek::Parameters;
-use frost_dalek::Participant;
-use serde::Deserialize;
+use frost_dalek::keygen::RoundTwo;
+use frost_dalek::keygen::SecretShare;
+use frost_dalek::precomputation::PublicCommitmentShareList;
+use frost_dalek::precomputation::SecretCommitmentShareList;
+use frost_dalek::signature::Signer;
+use frost_dalek::DistributedKeyGeneration;
+use frost_dalek::{GroupKey, IndividualSecretKey, Parameters, Participant};
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
 pub struct Config {
@@ -13,26 +18,27 @@ pub struct Config {
     pub n: u32,
 }
 
-/// Creates a vector of `n` participants
-///
-/// # Arguments
-///
-/// * `params` - threshold parameters
-pub fn create_participants(params: &Parameters) -> ParticipantVec {
-    let mut participants = vec![];
-    for server_index in 1..=params.n {
-        participants.push(Participant::new(&params, server_index));
-    }
-    participants
-}
-#[derive(Clone)]
+#[derive(Clone, PartialEq, PartialOrd)]
 pub enum Event {
+    /// The server has received the public key
+    Init,
     KeygenPhase1,
     KeygenPhase2,
 }
 
-pub type ParticipantVec = Vec<(Participant, Coefficients)>;
+#[derive(PartialEq, PartialOrd, Clone)]
+pub enum State {
+    Reset,
+    Init,
+    Phase1,
+    Phase2,
+    Timestamping,
+}
+
+pub type ParticipantVec = Vec<Option<Participant>>;
 pub type EventVec = Vec<Option<Event>>;
+pub type RoundOneStruct =
+    Option<frost_dalek::DistributedKeyGeneration<frost_dalek::keygen::RoundOne>>;
 /// Holds the state of the server, configuration, keys, etc.
 pub struct ServerState {
     /// Configuration of the context, namely t-n parameter
@@ -43,8 +49,31 @@ pub struct ServerState {
     pub participants: ParticipantVec,
     pub this_server_index: usize,
     pub confirmations: EventVec,
-    /// TODO: a tmp value, remove once the state mechine is working
-    pub hack_val: u32,
+    pub coefficients: Coefficients,
+    pub state: State,
+    // TODO: refactor
+    pub pubkey_sent: bool,
+    pub round_1_sent: bool,
+    pub round_one_struct: RoundOneStruct,
+    pub secretShares: Vec<Option<SecretShare>>,
+    pub server_state: Option<DistributedKeyGeneration<RoundTwo>>,
+    pub group_key: Option<GroupKey>,
+    pub secret_key: Option<IndividualSecretKey>,
+    pub public_commitment_shares: Option<PublicCommitmentShareList>,
+    pub secret_commitment_shares: Option<SecretCommitmentShareList>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct SecretShareMessage {
+    pub from: usize,
+    pub val: SecretShare,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PartialSignatureRequest {
+    pub message_hash: Vec<u8>,
+    pub signers: Vec<Signer>,
+    pub commitment_index: usize,
 }
 
 impl ServerState {
@@ -58,13 +87,26 @@ impl ServerState {
         servers: Vec<String>,
         this_server_index: usize,
     ) -> ServerState {
+        let mut participants = vec![None; parameters.n as usize];
+        let (part, coefficients) = Participant::new(&parameters, this_server_index as u32);
+        participants[this_server_index] = Some(part);
         ServerState {
             parameters,
             servers,
-            participants: create_participants(&parameters),
+            participants,
             this_server_index,
             confirmations: vec![None; parameters.n as usize],
-            hack_val: 0,
+            coefficients,
+            state: State::Init,
+            pubkey_sent: false,
+            round_1_sent: false,
+            round_one_struct: None,
+            secretShares: vec![None; parameters.n as usize],
+            server_state: None,
+            group_key: None,
+            secret_key: None,
+            public_commitment_shares: None,
+            secret_commitment_shares: None,
         }
     }
 
@@ -74,12 +116,50 @@ impl ServerState {
         self.participants
             .iter()
             .enumerate()
-            .filter(|&(i, _)| i != self.this_server_index)
-            .map(
-                |(_, (part, _)): (usize, &(Participant, Coefficients))| -> Participant {
-                    part.clone()
-                },
+            .filter(|&(i, val)| i != self.this_server_index && val.is_some())
+            .map(|(_, val): (usize, &Option<Participant>)| -> Participant {
+                match val {
+                    Some(part) => part.clone(),
+                    None => panic!("Unreachable code"),
+                }
+            })
+            .collect()
+    }
+
+    /// Returns true if the server contains pubkeys of all participants
+    pub fn have_all_pubkeys(&self) -> bool {
+        self.participants
+            .iter()
+            .fold(true, |agg, val: &Option<Participant>| -> bool {
+                agg && val.is_some()
+            })
+    }
+
+    /// returns a copy ot this server's participant struct
+    pub fn get_this_participant(&self) -> Participant {
+        match &self.participants[self.this_server_index] {
+            Some(val) => val.clone(),
+            None => panic!("This participant not set!"),
+        }
+    }
+
+    // TODO: a duplicate
+    pub fn have_all_shares(&self) -> bool {
+        self.secretShares
+            .iter()
+            .enumerate()
+            .filter(|(index, _): &(usize, &Option<SecretShare>)| *index != self.this_server_index)
+            .fold(
+                true,
+                |agg, (_, val): (usize, &Option<SecretShare>)| -> bool { agg && val.is_some() },
             )
+    }
+
+    pub fn get_secret_shares(&self) -> Vec<SecretShare> {
+        self.secretShares
+            .clone()
+            .into_iter()
+            .filter_map(|e| e)
             .collect()
     }
 }

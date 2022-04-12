@@ -1,0 +1,109 @@
+{
+	"info": {
+		"_postman_id": "d44bc588-1e6e-4c22-88af-b950e17c5345",
+		"name": "Diks-tits-requests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Trigger keygen",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/keygen",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"keygen"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create a Timestamp",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"hashAlgorithm\": \"sha2\",\n    \"hashedMessage\": \"5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/timestamp",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"timestamp"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get public key",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/pubkey",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"pubkey"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get commitment",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/commitment/0",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"commitment",
+						"0"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get groupkey",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/groupkey",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"groupkey"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

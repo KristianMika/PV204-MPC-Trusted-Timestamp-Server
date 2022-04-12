@@ -197,7 +197,7 @@ use crate::parameters::Parameters;
 
 /// A struct for holding a shard of the shared secret, in order to ensure that
 /// the shard is overwritten with zeroes when it falls out of scope.
-#[derive(Zeroize)]
+#[derive(Zeroize, Clone)]
 #[zeroize(drop)]
 pub struct Coefficients(pub(crate) Vec<Scalar>);
 
@@ -739,7 +739,7 @@ impl IndividualPublicKey {
 }
 
 /// A secret key, used by one participant in a threshold signature scheme, to sign a message.
-#[derive(Debug, Zeroize)]
+#[derive(Debug, Zeroize, Clone)]
 #[zeroize(drop)]
 pub struct SecretKey {
     /// The participant index to which this key belongs.
@@ -767,7 +767,7 @@ impl From<&SecretKey> for IndividualPublicKey {
 }
 
 /// A public key, used to verify a signature made by a threshold of a group of participants.
-#[derive(Clone, Copy, Debug, Eq)]
+#[derive(Clone, Copy, Debug, Eq, Serialize, Deserialize)]
 pub struct GroupKey(pub(crate) RistrettoPoint);
 
 impl PartialEq for GroupKey {

@@ -1,11 +1,26 @@
+use crate::build_address;
+use crate::PROTOCOL;
+use actix_web::web::Data;
+use actix_web::Responder;
 use actix_web::{post, web};
+use chrono::{DateTime, Utc};
+use curve25519_dalek::ristretto::RistrettoPoint;
+use frost_dalek::compute_message_hash;
+use frost_dalek::signature::PartialThresholdSignature;
+use frost_dalek::signature::Signer;
+use frost_dalek::IndividualPublicKey;
+use frost_dalek::Parameters;
+use frost_dalek::SignatureAggregator;
+use futures::lock::Mutex;
 use hex;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::time::SystemTime;
+use timestamp_server::PartialSignatureRequest;
+use timestamp_server::{ServerState, State};
 
 /// The struct sent by the client in the body as JSON
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[allow(non_snake_case)]
 pub struct TimestampStruct {
     /// The algorithm to be used for hashing
@@ -20,8 +35,9 @@ pub struct TimestampStruct {
 #[derive(Serialize)]
 #[allow(non_snake_case)]
 pub struct TimeStampResp {
-    status: String,         // for now, later PKIStatusInfo
-    timeStampToken: String, // TODO: read the RFC 3161
+    status: String, // for now, later PKIStatusInfo
+    /// Can be casted to [u8;64], see partial_sig or utils, function to_array
+    timeStampToken: Vec<u8>, // TODO: read the RFC 3161
 }
 
 /// Requests a signed timestamp of the provided data using the specified hash algorithm
@@ -33,38 +49,153 @@ pub struct TimeStampResp {
 /// - Anyone
 #[post("/timestamp")]
 pub async fn post_create_timestamp(
+    state: Data<Mutex<ServerState>>,
     request: web::Json<TimestampStruct>,
-) -> web::Json<TimeStampResp> {
+) -> impl Responder {
     // TODO: check the state
 
-    // TODO: compute the hash(hash(data) || timestamp)
-    let now = SystemTime::now();
+    if state.lock().await.state != State::Timestamping {
+        // return HttpResponse::Forbidden();
+        // TODO: return an error
+    }
 
-    let mut hasher = Sha256::new();
+    const CONTEXT: &[u8] = b"diks-tits";
 
-    let request_hash = match hex::decode(&request.hashedMessage) {
+    //let file_hash = b"HASH-OF-THE-FILE---RECEIVED-BY-THE-USER--PRELIM-TESTED-BY-US";
+    let file_hash = match hex::decode(&request.hashedMessage) {
         Ok(val) => val,
         Err(_) => {
             let err_response = TimeStampResp {
                 status: String::from("fail"),
-                timeStampToken: String::from(""),
+                timeStampToken: vec![],
             };
             return web::Json(err_response);
         }
     };
-    // now.hash(& mut hasher); TODO
-    hasher.update(request_hash);
-    let result = hasher.finalize();
 
-    // TODO: request partial signatures
+    let timenow = SystemTime::now();
+    let datetime: DateTime<Utc> = timenow.into();
+    let timestr = datetime.format("%Y%m%d%H%M%SZ").to_string();
+    println!("RFC 3161 compliant timestamp: {}", timestr);
+    let timestr = timestr.as_bytes(); // Time Stamp in UTC to avoid timezone issues. Format compliant with RFC 3161
 
-    // TODO: compute the composite signature
+    let mut hasher = Sha256::new();
+    hasher.update(file_hash);
+    hasher.update(timestr);
+    let fin_hash = hasher.finalize(); // Final hash of the timestamp and the file hash
 
-    // TODO: return the composite signature
+    let message_hash = compute_message_hash(&CONTEXT[..], &fin_hash[..]);
+
+    let parameters = state.lock().await.parameters.clone();
+    let group_key = state.lock().await.group_key.unwrap().clone();
+    let mut aggregator =
+        SignatureAggregator::new(parameters, group_key, &CONTEXT[..], &fin_hash[..]);
+
+    let signers_to_sign = get_random_signers(&state.lock().await.parameters);
+
+    // TODO: store this into the state + increment!!!
+    let commitment_index = 0;
+    for signer_index in signers_to_sign.clone() {
+        let target_ip = state.lock().await.servers[signer_index].clone(); // TODO: get_nth_ip(n)
+        let commitment = get_commitment(&target_ip, commitment_index).await;
+        let public_key = get_public_key(&target_ip).await;
+        aggregator.include_signer(signer_index as u32, commitment, public_key);
+    }
+
+    for signer_index in signers_to_sign {
+        let target_ip = state.lock().await.servers[signer_index].clone(); // TODO: get_nth_ip(n)
+        let partial_sig = get_partial_signature(
+            &target_ip,
+            &message_hash,
+            aggregator.get_signers(),
+            commitment_index as usize,
+        )
+        .await;
+        aggregator.include_partial_signature(partial_sig);
+    }
+
+    let aggregator = match aggregator.finalize() {
+        Ok(v) => v,
+        Err(e) => panic!("Aggregator pooped!\n{:?}", e),
+    };
+
+    let threshold_sign = match aggregator.aggregate() {
+        Ok(v) => v,
+        Err(e) => panic!(
+            "Bad signing. Likely corrupted signees or signatures!\n{:?}",
+            e
+        ),
+    };
+    threshold_sign.verify(&group_key, &message_hash).unwrap();
+
     let response: TimeStampResp = TimeStampResp {
         status: String::from("Ok?"),
-        timeStampToken: format!("{:X}", result),
+        timeStampToken: threshold_sign.to_bytes().to_vec(),
     };
 
     web::Json(response)
+}
+
+// TODO: implement
+/// Returns a vector (a subset) of random signers
+///
+/// # Arguments
+/// - `n` - the number of participants
+pub fn get_random_signers(parameters: &Parameters) -> Vec<usize> {
+    vec![0, 1] // rn a trully randomly subset chosen by me is being returned
+}
+
+pub async fn get_commitment(
+    server_address: &str,
+    commitment_index: u32,
+) -> (RistrettoPoint, RistrettoPoint) {
+    let client = reqwest::Client::new();
+    // TODO: return a result!!!!!
+    let res = reqwest::get(build_address(
+        PROTOCOL,
+        server_address,
+        &format!("commitment/{}", commitment_index.to_string()),
+    ))
+    .await
+    .unwrap()
+    .json::<(RistrettoPoint, RistrettoPoint)>()
+    .await;
+    res.unwrap()
+}
+
+// TODO: use caching, try to cache address in the state, maybe pre-cache them
+pub async fn get_public_key(server_address: &str) -> IndividualPublicKey {
+    // TODO: return a result!!!!!
+
+    log::info!("Requesting a pubkey from {}", server_address);
+    let res = reqwest::get(build_address(PROTOCOL, server_address, "get_pubkey"))
+        .await
+        .unwrap()
+        .json::<IndividualPublicKey>()
+        .await;
+    log::info!("I got {:?}", res.as_ref().unwrap());
+    res.unwrap()
+}
+
+pub async fn get_partial_signature(
+    server_address: &str,
+    message_hash: &[u8; 64],
+    signers: &Vec<Signer>,
+    commitment_index: usize,
+) -> PartialThresholdSignature {
+    let client = reqwest::Client::new();
+    // TODO: return a result!!!!!
+    let res = client
+        .post(build_address(PROTOCOL, server_address, "partial_signature"))
+        .json(&PartialSignatureRequest {
+            message_hash: message_hash.to_vec(),
+            signers: signers.clone(),
+            commitment_index,
+        })
+        .send()
+        .await
+        .unwrap()
+        .json::<PartialThresholdSignature>()
+        .await;
+    res.unwrap()
 }

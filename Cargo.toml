@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 actix-web = "4.0.1"
 actix="0.13.0"
+actix-rt = "2.7.0"
 futures = "0.3.21"
 log = "0.4.16"
 env_logger = "0.6.1"
@@ -19,3 +20,5 @@ hex = "0.4"
 frost-dalek = { path = "frost-dalek"}
 curve25519-dalek = { version = "3", features = ["serde"]}
 serde = { version = "1.0", features = ["derive"] }
+chrono = "0.4.19"
+rand = "0.7" # the newer version doesn't with the library work!
