@@ -14,6 +14,7 @@ pub mod keygen;
 const CONFIG_PATH: &str = "config/config.toml";
 const BIND_IP: &str = "0.0.0.0";
 const PROTOCOL: &str = "http";
+const commitments_to_generate: u32 = 100;
 
 // TODO: consider anyhow
 // TODO: use an automata and track states + check transitions

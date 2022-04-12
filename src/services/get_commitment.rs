@@ -1,3 +1,4 @@
+use crate::commitments_to_generate;
 use actix_web::http::header::ContentType;
 use actix_web::web::Data;
 use actix_web::{get, web, HttpResponse, Responder};
@@ -24,22 +25,23 @@ pub async fn get_commitment(
         // TODO: return an error
     }
 
+    // moved to keygen 2 endpoint
     // TODO: refactor, rn we are allowing only 100 timestamps
-    let commitments_to_generate = 100;
-    let this_server_index = state.lock().await.this_server_index.clone();
-    if !state.lock().await.public_commitment_shares.is_some() {
-        let (public_shares, secret_shares) = generate_commitment_share_lists(
-            &mut OsRng,
-            this_server_index as u32,
-            commitments_to_generate,
-        );
-        state.lock().await.public_commitment_shares = Some(public_shares);
-        state.lock().await.secret_commitment_shares = Some(secret_shares);
-    }
+    // let commitments_to_generate = 100;
+    // let this_server_index = state.lock().await.this_server_index.clone();
+    // if !state.lock().await.public_commitment_shares.is_some() {
+    //     let (public_shares, secret_shares) = generate_commitment_share_lists(
+    //         &mut OsRng,
+    //         this_server_index as u32,
+    //         commitments_to_generate,
+    //     );
+    //     state.lock().await.public_commitment_shares = Some(public_shares);
+    //     state.lock().await.secret_commitment_shares = Some(secret_shares);
+    // }
 
     let commitment_index: usize = path.into_inner();
 
-    if commitment_index >= commitments_to_generate {
+    if commitment_index >= commitments_to_generate as usize {
         // TODO: return error
     }
     let to_share = state

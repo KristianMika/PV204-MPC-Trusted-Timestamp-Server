@@ -1,10 +1,13 @@
+use crate::commitments_to_generate;
 use crate::keygen::share_groupkey;
 use actix_web::web::Data;
 use actix_web::HttpResponse;
 use actix_web::Responder;
 use actix_web::{post, web};
+use frost_dalek::generate_commitment_share_lists;
 use frost_dalek::GroupKey;
 use futures::lock::Mutex;
+use rand::rngs::OsRng;
 
 use timestamp_server::{ServerState, State};
 
@@ -30,6 +33,16 @@ pub async fn post_keygen_p2(
         state.lock().await.state = State::Timestamping;
 
         log::info!("Sharing the group key");
+
+        let this_server_index = state.lock().await.this_server_index.clone();
+        let (public_shares, secret_shares) = generate_commitment_share_lists(
+            &mut OsRng,
+            this_server_index as u32,
+            commitments_to_generate as usize,
+        );
+        state.lock().await.public_commitment_shares = Some(public_shares);
+        state.lock().await.secret_commitment_shares = Some(secret_shares);
+
         actix_rt::spawn(async {
             share_groupkey(state).await;
         });

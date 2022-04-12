@@ -1,6 +1,8 @@
 use crate::build_address;
 use crate::PROTOCOL;
+use actix_web::http::header::ContentType;
 use actix_web::web::Data;
+use actix_web::HttpResponse;
 use actix_web::Responder;
 use actix_web::{post, web};
 use chrono::{DateTime, Utc};
@@ -53,6 +55,9 @@ pub async fn post_create_timestamp(
     request: web::Json<TimestampStruct>,
 ) -> impl Responder {
     // TODO: check the state
+    // -----------------------------------------------
+    // BIG TODO:: commitment index
+    // -----------------------------------------------
 
     if state.lock().await.state != State::Timestamping {
         // return HttpResponse::Forbidden();
@@ -70,6 +75,7 @@ pub async fn post_create_timestamp(
                 timeStampToken: vec![],
             };
             return web::Json(err_response);
+            // return web::Json(err_response);
         }
     };
 
@@ -95,10 +101,28 @@ pub async fn post_create_timestamp(
 
     // TODO: store this into the state + increment!!!
     let commitment_index = 0;
+
+    let this_server_index = state.lock().await.this_server_index.clone();
     for signer_index in signers_to_sign.clone() {
         let target_ip = state.lock().await.servers[signer_index].clone(); // TODO: get_nth_ip(n)
-        let commitment = get_commitment(&target_ip, commitment_index).await;
-        let public_key = get_public_key(&target_ip).await;
+
+        let commitment = match signer_index == this_server_index {
+            true => state
+                .lock()
+                .await
+                .public_commitment_shares
+                .as_ref()
+                .unwrap()
+                .commitments[commitment_index]
+                .clone(),
+            false => get_commitment(&target_ip, commitment_index as u32).await,
+        };
+
+        let public_key = match signer_index == this_server_index {
+            true => state.lock().await.secret_key.as_ref().unwrap().to_public(),
+            false => get_public_key(&target_ip).await,
+        };
+
         aggregator.include_signer(signer_index as u32, commitment, public_key);
     }
 
@@ -167,8 +191,15 @@ pub async fn get_commitment(
 pub async fn get_public_key(server_address: &str) -> IndividualPublicKey {
     // TODO: return a result!!!!!
 
-    log::info!("Requesting a pubkey from {}", server_address);
-    let res = reqwest::get(build_address(PROTOCOL, server_address, "get_pubkey"))
+    let addr = build_address(PROTOCOL, server_address, "pubkey");
+    log::info!(
+        "Requesting a pubkey from {} address({})",
+        server_address,
+        addr
+    );
+
+    // TODO: check response codes everywhere!!!
+    let res = reqwest::get(addr)
         .await
         .unwrap()
         .json::<IndividualPublicKey>()

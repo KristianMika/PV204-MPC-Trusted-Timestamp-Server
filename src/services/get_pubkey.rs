@@ -2,6 +2,7 @@ use actix_web::http::header::ContentType;
 use actix_web::web::Data;
 use actix_web::HttpResponse;
 use actix_web::{get, web, Responder};
+use frost_dalek::IndividualPublicKey;
 use futures::lock::Mutex;
 use timestamp_server::{ServerState, State};
 
@@ -20,9 +21,8 @@ pub async fn get_pubkey(state: Data<Mutex<ServerState>>) -> impl Responder {
         // TODO: return an error
     }
 
-    let pubkey = state.lock().await.secret_key.as_ref().unwrap().to_public();
+    let pubkey: IndividualPublicKey = state.lock().await.secret_key.as_ref().unwrap().to_public();
     log::info!("responding with a pubkey {:?}", pubkey.clone());
-    HttpResponse::Ok()
-        .content_type(ContentType::json())
-        .json(pubkey)
+
+    web::Json(pubkey)
 }
